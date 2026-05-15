@@ -1,6 +1,6 @@
 import { ref, computed } from 'vue'
 
-export function useDarts({ difficulty, maxQuestions, timeLimit }) {
+export function useDarts({ difficulty, maxQuestions, timeLimit, doubleValidation }) {
   // --- Persistent ---
   const best = ref(parseInt(localStorage.getItem('dartsBest') || '0'))
 
@@ -17,19 +17,24 @@ export function useDarts({ difficulty, maxQuestions, timeLimit }) {
   const feedbackState = ref(null) // null | 'correct' | 'wrong' | 'timeout'
   const answered      = ref(false)
 
+  // Phase 1 = deviner le total de la volée
+  // Phase 2 = deviner le score restant (currentScore - volée)
+  const phase         = ref(1)
+  const voleeTotal    = ref(0) // mémorisé après phase 1
+
   // --- Timer ---
   const timeLeft = ref(timeLimit ?? 0)
   let _timer       = null
   let _autoAdvance = null
 
   // --- Computed ---
-  const correctAnswer = computed(() =>
-    currentVolee.value.reduce((sum, d) => sum + d.pts, 0)
-  )
-
-  const timerProgress = computed(() =>
-    timeLimit ? timeLeft.value / timeLimit : 1
-  )
+  const correctAnswer = computed(() => {
+    if (phase.value === 1) {
+      return currentVolee.value.reduce((sum, d) => sum + d.pts, 0)
+    }
+    // Phase 2 : score restant après la volée
+    return currentScore.value - voleeTotal.value
+  })
 
   const questionLabel = computed(() =>
     maxQuestions
@@ -37,29 +42,25 @@ export function useDarts({ difficulty, maxQuestions, timeLimit }) {
       : String(questionIndex.value)
   )
 
+  const phaseLabel = computed(() =>
+    phase.value === 2 ? 'Score restant ?' : 'Total de la volée ?'
+  )
+
   // --- Dart generation ---
-  function rand20() {
-    return Math.floor(Math.random() * 20) + 1
-  }
+  function rand20() { return Math.floor(Math.random() * 20) + 1 }
 
   function generateDart() {
     const r = Math.random()
-
     if (difficulty === 'easy') {
       if (r < 0.05) return { type: 'miss', label: 'Miss', pts: 0 }
-      const n = rand20()
-      return { type: 'single', label: String(n), pts: n }
+      const n = rand20(); return { type: 'single', label: String(n), pts: n }
     }
-
     if (difficulty === 'medium') {
       if (r < 0.04) return { type: 'miss', label: 'Miss', pts: 0 }
       if (r < 0.55) { const n = rand20(); return { type: 'single', label: String(n), pts: n } }
-      const n = rand20()
-      return { type: 'double', label: `D${n}`, pts: n * 2 }
+      const n = rand20(); return { type: 'double', label: `D${n}`, pts: n * 2 }
     }
-
-    // hard
-    if (r < 0.03) return { type: 'miss',   label: 'Miss',        pts: 0      }
+    if (r < 0.03) return { type: 'miss', label: 'Miss', pts: 0 }
     if (r < 0.38) { const n = rand20(); return { type: 'single', label: String(n), pts: n     } }
     if (r < 0.62) { const n = rand20(); return { type: 'double', label: `D${n}`,   pts: n * 2 } }
     if (r < 0.88) { const n = rand20(); return { type: 'triple', label: `T${n}`,   pts: n * 3 } }
@@ -67,22 +68,15 @@ export function useDarts({ difficulty, maxQuestions, timeLimit }) {
     return               { type: 'bull', label: 'D.Bull', pts: 50 }
   }
 
-  // Génère une volée dont la somme ne dépasse pas scoreLimit
   function generateVolee(scoreLimit) {
     for (let i = 0; i < 50; i++) {
       const v = [generateDart(), generateDart(), generateDart()]
       if (v.reduce((s, d) => s + d.pts, 0) <= scoreLimit) return v
     }
-    // Fallback : génération contrainte par le budget restant
-    const darts = []
-    let budget = scoreLimit
+    const darts = []; let budget = scoreLimit
     for (let i = 0; i < 3; i++) {
-      if (budget <= 0) {
-        darts.push({ type: 'miss', label: 'Miss', pts: 0 })
-        continue
-      }
-      const maxVal = Math.min(budget, 20)
-      const n = Math.floor(Math.random() * maxVal) + 1
+      if (budget <= 0) { darts.push({ type: 'miss', label: 'Miss', pts: 0 }); continue }
+      const n = Math.floor(Math.random() * Math.min(budget, 20)) + 1
       darts.push({ type: 'single', label: String(n), pts: n })
       budget -= n
     }
@@ -90,10 +84,7 @@ export function useDarts({ difficulty, maxQuestions, timeLimit }) {
   }
 
   // --- Timers ---
-  function stopTimer() {
-    clearInterval(_timer)
-    _timer = null
-  }
+  function stopTimer() { clearInterval(_timer); _timer = null }
 
   function startTimer() {
     stopTimer()
@@ -101,10 +92,7 @@ export function useDarts({ difficulty, maxQuestions, timeLimit }) {
     timeLeft.value = timeLimit
     _timer = setInterval(() => {
       timeLeft.value--
-      if (timeLeft.value <= 0) {
-        stopTimer()
-        onTimeout()
-      }
+      if (timeLeft.value <= 0) { stopTimer(); onTimeout() }
     }, 1000)
   }
 
@@ -122,7 +110,7 @@ export function useDarts({ difficulty, maxQuestions, timeLimit }) {
 
   function onTimeout() {
     answered.value = true
-    streak.value = 0
+    if (phase.value === 1) streak.value = 0
     feedbackState.value = 'timeout'
     scheduleNextRound()
   }
@@ -130,7 +118,7 @@ export function useDarts({ difficulty, maxQuestions, timeLimit }) {
   // --- Actions ---
   function nextRound() {
     clearTimeout(_autoAdvance)
-
+    phase.value         = 1
     answered.value      = false
     inputValue.value    = ''
     feedbackState.value = null
@@ -152,7 +140,6 @@ export function useDarts({ difficulty, maxQuestions, timeLimit }) {
 
   function validate() {
     if (answered.value) return
-
     const userAnswer = parseInt(inputValue.value)
     if (isNaN(userAnswer)) return
 
@@ -160,15 +147,34 @@ export function useDarts({ difficulty, maxQuestions, timeLimit }) {
     answered.value = true
 
     if (userAnswer === correctAnswer.value) {
-      streak.value++
-      correctCount.value++
-      if (streak.value > best.value) {
-        best.value = streak.value
-        localStorage.setItem('dartsBest', String(best.value))
+      if (phase.value === 1) {
+        streak.value++
+        correctCount.value++
+        if (streak.value > best.value) {
+          best.value = streak.value
+          localStorage.setItem('dartsBest', String(best.value))
+        }
+
+        // Si double validation activé → passer en phase 2
+        if (doubleValidation) {
+          voleeTotal.value    = correctAnswer.value
+          feedbackState.value = 'phase1ok'  // feedback vert rapide
+          // Transition vers phase 2 après 1s
+          clearTimeout(_autoAdvance)
+          _autoAdvance = setTimeout(() => {
+            phase.value         = 2
+            answered.value      = false
+            inputValue.value    = ''
+            feedbackState.value = null
+            startTimer()
+          }, 1000)
+          return
+        }
       }
+
       feedbackState.value = 'correct'
     } else {
-      streak.value = 0
+      if (phase.value === 1) streak.value = 0
       feedbackState.value = 'wrong'
     }
 
@@ -184,7 +190,8 @@ export function useDarts({ difficulty, maxQuestions, timeLimit }) {
     currentScore, currentVolee, inputValue,
     feedbackState, answered, streak, best,
     questionIndex, correctCount, gameOver, timeLeft,
-    correctAnswer, timerProgress, questionLabel,
+    phase, voleeTotal,
+    correctAnswer, questionLabel, phaseLabel,
     nextRound, appendDigit, deleteDigit, validate, cleanup,
   }
 }

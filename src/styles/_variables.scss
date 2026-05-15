@@ -2,15 +2,15 @@
 $font-body:    'Geist', -apple-system, BlinkMacSystemFont, sans-serif;
 $font-display: 'Bulevar', sans-serif;
 
-// Colors — dark base
-$bg:          #0d0d0d;
-$surface:     #1a1a1a;
-$border:      rgba(255, 255, 255, 0.09);
+// Colors — dark forest green base (DA DartCounter)
+$bg:          #101c14;
+$surface:     #1a2b1d;
+$surface2:    #223026;
+$border:      rgba(255, 255, 255, 0.08);
 
-// Brand orange (inspired by the DA)
+// Brand orange
 $orange:      #D64A24;
 $orange-dark: #B83D1C;
-$orange-light:rgba(214, 74, 36, 0.15);
 
 // Accent green (correct / submit)
 $accent:      #22c55e;
@@ -21,21 +21,15 @@ $accent-light:#86efac;
 $red:         #ef4444;
 $red-light:   #fca5a5;
 $text:        #ffffff;
-$muted:       rgba(255, 255, 255, 0.42);
+$muted:       rgba(255, 255, 255, 0.40);
 
-// Dart type colors (used as text tints on colored card)
-$dart-single:       #93c5fd;
-$dart-single-light: #bfdbfe;
-$dart-double:       #d8b4fe;
+// Dart type tints (text color on orange card)
 $dart-double-light: #ede9fe;
-$dart-triple:       #fde68a;
 $dart-triple-light: #fef9c3;
-$dart-bull:         #fca5a5;
 $dart-bull-light:   #fee2e2;
-$dart-miss:         rgba(255,255,255,0.3);
 
 // Spacing
-$radius-sm: 8px;
-$radius-md: 14px;
-$radius-lg: 20px;
+$radius-sm:   8px;
+$radius-md:   14px;
+$radius-lg:   20px;
 $radius-pill: 999px;

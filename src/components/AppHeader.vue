@@ -1,52 +1,57 @@
 <script setup>
 defineProps({
-  streak:        { type: Number, required: true },
-  questionLabel: { type: String, required: true },
-  maxQuestions:  { default: null },
+  title: { type: String, default: 'DARTS COUNTER' },
 })
+
+defineEmits(['back'])
 </script>
 
 <template>
   <header class="app-header">
-    <h1 class="app-header__title">DARTS</h1>
-    <div class="app-header__right">
-      <div v-if="maxQuestions !== null" class="app-header__pill">
-        {{ questionLabel }}
-      </div>
-      <div v-else class="app-header__pill">
-        Série <strong>{{ streak }}</strong>
-      </div>
-    </div>
+    <button class="app-header__back" @click="$emit('back')">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
+        <path d="M19 12H5M5 12L12 19M5 12L12 5" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>
+    </button>
+
+    <h1 class="app-header__title">{{ title }}</h1>
+
+    <!-- Espace pour équilibrer -->
+    <div class="app-header__spacer" />
   </header>
 </template>
 
 <style lang="scss" scoped>
 .app-header {
   width: 100%;
-  padding: 14px 20px 12px;
-  display: flex;
+  padding: 14px 20px 10px;
+  display: grid;
+  grid-template-columns: 40px 1fr 40px;
   align-items: center;
-  justify-content: space-between;
+
+  &__back {
+    color: $text;
+    display: flex;
+    align-items: center;
+    justify-content: flex-start;
+    padding: 4px;
+    transition: opacity 0.15s;
+
+    &:active { opacity: 0.6; }
+  }
 
   &__title {
     font-family: $font-display;
-    font-size: 22px;
+    font-size: 18px;
     font-weight: 400;
-    letter-spacing: 2px;
+    letter-spacing: 1px;
     color: $text;
+    text-align: center;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
   }
 
-  &__pill {
-    background: $surface;
-    border: 1px solid $border;
-    border-radius: $radius-pill;
-    padding: 5px 14px;
-    font-size: 13px;
-    font-weight: 700;
-    color: $text;
-    font-variant-numeric: tabular-nums;
-
-    strong { color: $orange; }
-  }
+  &__spacer { width: 40px; }
 }
 </style>
