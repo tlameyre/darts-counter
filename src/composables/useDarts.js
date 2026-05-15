@@ -1,71 +1,115 @@
 import { ref, computed } from 'vue'
 
-const DIFFICULTIES = ['easy', 'medium', 'hard']
-
-export function useDarts() {
-  // --- Persistent state ---
+export function useDarts({ difficulty, maxQuestions, timeLimit }) {
+  // --- Persistent ---
   const best = ref(parseInt(localStorage.getItem('dartsBest') || '0'))
 
   // --- Game state ---
-  const difficulty = ref('easy')
-  const currentScore = ref(0)
-  const currentVolee = ref([])
-  const inputValue = ref('')
-  const feedbackState = ref(null) // null | 'correct' | 'wrong'
-  const answered = ref(false)
-  const streak = ref(0)
+  const streak        = ref(0)
+  const questionIndex = ref(0)
+  const correctCount  = ref(0)
+  const gameOver      = ref(false)
+
+  // --- Round state ---
+  const currentScore  = ref(0)
+  const currentVolee  = ref([])
+  const inputValue    = ref('')
+  const feedbackState = ref(null) // null | 'correct' | 'wrong' | 'timeout'
+  const answered      = ref(false)
+
+  // --- Timer ---
+  const timeLeft = ref(timeLimit ?? 0)
+  let _timer = null
 
   // --- Computed ---
   const correctAnswer = computed(() =>
     currentVolee.value.reduce((sum, d) => sum + d.pts, 0)
   )
 
+  const timerProgress = computed(() =>
+    timeLimit ? timeLeft.value / timeLimit : 1
+  )
+
+  const questionLabel = computed(() =>
+    maxQuestions
+      ? `${questionIndex.value} / ${maxQuestions}`
+      : String(questionIndex.value)
+  )
+
   // --- Dart generation ---
+  function rand20() {
+    return Math.floor(Math.random() * 20) + 1
+  }
+
   function generateDart() {
     const r = Math.random()
 
-    if (difficulty.value === 'easy') {
+    if (difficulty === 'easy') {
       if (r < 0.05) return { type: 'miss', label: 'Miss', pts: 0 }
       const n = rand20()
       return { type: 'single', label: String(n), pts: n }
     }
 
-    if (difficulty.value === 'medium') {
+    if (difficulty === 'medium') {
       if (r < 0.04) return { type: 'miss', label: 'Miss', pts: 0 }
-      if (r < 0.55) {
-        const n = rand20()
-        return { type: 'single', label: String(n), pts: n }
-      }
+      if (r < 0.55) { const n = rand20(); return { type: 'single', label: String(n), pts: n } }
       const n = rand20()
       return { type: 'double', label: `D${n}`, pts: n * 2 }
     }
 
     // hard
-    if (r < 0.03) return { type: 'miss', label: 'Miss', pts: 0 }
-    if (r < 0.38) { const n = rand20(); return { type: 'single', label: String(n), pts: n } }
-    if (r < 0.62) { const n = rand20(); return { type: 'double', label: `D${n}`, pts: n * 2 } }
-    if (r < 0.88) { const n = rand20(); return { type: 'triple', label: `T${n}`, pts: n * 3 } }
-    if (r < 0.95) return { type: 'bull', label: 'Bull', pts: 25 }
-    return { type: 'bull', label: 'D.Bull', pts: 50 }
+    if (r < 0.03) return { type: 'miss',   label: 'Miss',        pts: 0       }
+    if (r < 0.38) { const n = rand20(); return { type: 'single', label: String(n), pts: n      } }
+    if (r < 0.62) { const n = rand20(); return { type: 'double', label: `D${n}`,   pts: n * 2  } }
+    if (r < 0.88) { const n = rand20(); return { type: 'triple', label: `T${n}`,   pts: n * 3  } }
+    if (r < 0.95) return { type: 'bull', label: 'Bull',   pts: 25 }
+    return               { type: 'bull', label: 'D.Bull', pts: 50 }
   }
 
-  function rand20() {
-    return Math.floor(Math.random() * 20) + 1
+  // --- Timer ---
+  function stopTimer() {
+    clearInterval(_timer)
+    _timer = null
+  }
+
+  function startTimer() {
+    stopTimer()
+    if (!timeLimit) return
+    timeLeft.value = timeLimit
+    _timer = setInterval(() => {
+      timeLeft.value--
+      if (timeLeft.value <= 0) {
+        stopTimer()
+        onTimeout()
+      }
+    }, 1000)
+  }
+
+  function onTimeout() {
+    answered.value = true
+    streak.value = 0
+    feedbackState.value = 'timeout'
+    // Auto-advance after 1.5s
+    setTimeout(() => {
+      if (!gameOver.value) nextRound()
+    }, 1500)
   }
 
   // --- Actions ---
-  function setDifficulty(d) {
-    if (!DIFFICULTIES.includes(d)) return
-    difficulty.value = d
-    nextRound()
-  }
-
   function nextRound() {
-    answered.value = false
+    if (maxQuestions !== null && questionIndex.value >= maxQuestions) {
+      gameOver.value = true
+      stopTimer()
+      return
+    }
+
+    answered.value   = false
     inputValue.value = ''
     feedbackState.value = null
+    questionIndex.value++
     currentScore.value = Math.floor(Math.random() * 500) + 2
     currentVolee.value = [generateDart(), generateDart(), generateDart()]
+    startTimer()
   }
 
   function appendDigit(digit) {
@@ -87,10 +131,12 @@ export function useDarts() {
     const userAnswer = parseInt(inputValue.value)
     if (isNaN(userAnswer)) return
 
+    stopTimer()
     answered.value = true
 
     if (userAnswer === correctAnswer.value) {
       streak.value++
+      correctCount.value++
       if (streak.value > best.value) {
         best.value = streak.value
         localStorage.setItem('dartsBest', String(best.value))
@@ -100,25 +146,25 @@ export function useDarts() {
       streak.value = 0
       feedbackState.value = 'wrong'
     }
+
+    // Auto-advance si c'était la dernière question
+    if (maxQuestions !== null && questionIndex.value >= maxQuestions) {
+      setTimeout(() => { gameOver.value = true }, 1200)
+    }
+  }
+
+  function cleanup() {
+    stopTimer()
   }
 
   return {
     // state
-    difficulty,
-    currentScore,
-    currentVolee,
-    inputValue,
-    feedbackState,
-    answered,
-    streak,
-    best,
+    currentScore, currentVolee, inputValue,
+    feedbackState, answered, streak, best,
+    questionIndex, correctCount, gameOver, timeLeft,
     // computed
-    correctAnswer,
+    correctAnswer, timerProgress, questionLabel,
     // actions
-    setDifficulty,
-    nextRound,
-    appendDigit,
-    deleteDigit,
-    validate,
+    nextRound, appendDigit, deleteDigit, validate, cleanup,
   }
 }

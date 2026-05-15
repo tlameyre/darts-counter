@@ -8,6 +8,11 @@ defineProps({
 <template>
   <header class="app-header">
     <h1 class="app-header__title">Darts <span>Counter</span></h1>
+
+    <div v-if="$slots.center" class="app-header__center">
+      <slot name="center" />
+    </div>
+
     <div class="app-header__stats">
       <div class="stat-pill">Serie: <strong>{{ streak }}</strong></div>
       <div class="stat-pill">Meilleur: <strong>{{ best }}</strong></div>
@@ -24,6 +29,7 @@ defineProps({
   display: flex;
   align-items: center;
   justify-content: space-between;
+  gap: 8px;
   position: sticky;
   top: 0;
   z-index: 10;
@@ -31,13 +37,20 @@ defineProps({
   &__title {
     font-size: 20px;
     font-weight: 700;
+    flex-shrink: 0;
 
     span { color: $accent; }
+  }
+
+  &__center {
+    flex: 1;
+    text-align: center;
   }
 
   &__stats {
     display: flex;
     gap: 6px;
+    flex-shrink: 0;
   }
 }
 
