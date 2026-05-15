@@ -8,16 +8,13 @@ defineProps({
 
 <template>
   <header class="app-header">
-    <h1 class="app-header__title">Darts <span>Counter</span></h1>
-
+    <h1 class="app-header__title">DARTS</h1>
     <div class="app-header__right">
-      <!-- Questions définies : affiche uniquement le compteur -->
-      <div v-if="maxQuestions !== null" class="stat-pill">
+      <div v-if="maxQuestions !== null" class="app-header__pill">
         {{ questionLabel }}
       </div>
-      <!-- Illimité : affiche la série -->
-      <div v-else class="stat-pill">
-        Série: <strong>{{ streak }}</strong>
+      <div v-else class="app-header__pill">
+        Série <strong>{{ streak }}</strong>
       </div>
     </div>
   </header>
@@ -26,32 +23,30 @@ defineProps({
 <style lang="scss" scoped>
 .app-header {
   width: 100%;
-  background: $card;
-  border-bottom: 1px solid $border;
-  padding: 12px 16px 10px;
+  padding: 14px 20px 12px;
   display: flex;
   align-items: center;
   justify-content: space-between;
-  position: sticky;
-  top: 0;
-  z-index: 10;
 
   &__title {
-    font-size: 18px;
-    font-weight: 700;
-
-    span { color: $accent; }
+    font-family: $font-display;
+    font-size: 22px;
+    font-weight: 400;
+    letter-spacing: 2px;
+    color: $text;
   }
-}
 
-.stat-pill {
-  background: $bg;
-  border: 1px solid $border;
-  border-radius: 20px;
-  padding: 4px 12px;
-  font-size: 13px;
-  font-weight: 600;
-  color: $text;
-  font-variant-numeric: tabular-nums;
+  &__pill {
+    background: $surface;
+    border: 1px solid $border;
+    border-radius: $radius-pill;
+    padding: 5px 14px;
+    font-size: 13px;
+    font-weight: 700;
+    color: $text;
+    font-variant-numeric: tabular-nums;
+
+    strong { color: $orange; }
+  }
 }
 </style>

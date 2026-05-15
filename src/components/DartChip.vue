@@ -26,33 +26,36 @@ const TYPE_LABELS = {
   border-radius: $radius-md;
   padding: 8px 6px;
   text-align: center;
-  border: 2px solid transparent;
+  background: rgba(0, 0, 0, 0.22);
+  border: 1.5px solid rgba(255, 255, 255, 0.15);
 
   &__type {
     font-size: 9px;
     text-transform: uppercase;
-    letter-spacing: 0.6px;
-    font-weight: 600;
-    opacity: 0.75;
+    letter-spacing: 0.8px;
+    font-weight: 700;
+    color: rgba(255, 255, 255, 0.55);
     margin-bottom: 3px;
   }
 
   &__label {
-    font-size: 18px;
-    font-weight: 700;
+    font-family: $font-display;
+    font-size: 20px;
     line-height: 1;
+    color: white;
   }
 
   &__pts {
     font-size: 10px;
-    opacity: 0.6;
+    color: rgba(255, 255, 255, 0.5);
     margin-top: 2px;
   }
 
-  &--single { background: rgba($dart-single, 0.15); border-color: rgba($dart-single, 0.4); color: $dart-single-light; }
-  &--double { background: rgba($dart-double, 0.15); border-color: rgba($dart-double, 0.4); color: $dart-double-light; }
-  &--triple { background: rgba($dart-triple, 0.15); border-color: rgba($dart-triple, 0.4); color: $dart-triple-light; }
-  &--bull   { background: rgba($dart-bull,   0.15); border-color: rgba($dart-bull,   0.4); color: $dart-bull-light;   }
-  &--miss   { background: rgba($dart-miss,   0.10); border-color: rgba($dart-miss,   0.2); color: $dart-miss;         }
+  // Teintures par type sur le label
+  &--double .dart-chip__label { color: $dart-double-light; }
+  &--triple .dart-chip__label { color: $dart-triple-light; }
+  &--bull   .dart-chip__label { color: $dart-bull-light;   }
+  &--miss   { background: rgba(0,0,0,0.15); }
+  &--miss .dart-chip__label   { color: rgba(255,255,255,0.35); }
 }
 </style>

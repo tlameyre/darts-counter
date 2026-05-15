@@ -8,69 +8,47 @@ defineEmits(['validate'])
 </script>
 
 <template>
-  <div class="answer-input">
-    <div class="answer-input__label">Total de la volée =</div>
-    <div class="answer-input__row">
-      <div
-        class="answer-input__display"
-        :class="{ 'answer-input__display--error': hasError }"
-      >
-        {{ value || '?' }}
-      </div>
-      <button class="answer-input__btn" @click="$emit('validate')">OK</button>
-    </div>
+  <div class="answer-input" :class="{ 'answer-input--error': hasError }">
+    <div class="answer-input__value">{{ value || '?' }}</div>
+    <button class="answer-input__btn" @click="$emit('validate')">OK</button>
   </div>
 </template>
 
 <style lang="scss" scoped>
 .answer-input {
-  background: $card;
-  border: 1px solid $border;
-  border-radius: $radius-lg;
-  padding: 10px 14px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: #ffffff;
+  border: 3px solid transparent;
+  border-radius: $radius-pill;
+  padding: 8px 8px 8px 24px;
+  transition: border-color 0.2s;
 
-  &__label {
-    font-size: 11px;
-    color: $muted;
-    margin-bottom: 6px;
-    text-align: center;
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
-  }
+  &--error { border-color: $red; }
 
-  &__row {
-    display: flex;
-    gap: 8px;
-    align-items: center;
-  }
-
-  &__display {
+  &__value {
     flex: 1;
-    background: $bg;
-    border: 2px solid $border;
-    border-radius: $radius-md;
-    color: $text;
-    font-size: 22px;
-    font-weight: 700;
-    text-align: center;
-    padding: 9px 10px;
+    font-family: $font-display;
+    font-size: 28px;
+    color: #111;
     font-variant-numeric: tabular-nums;
-    transition: border-color 0.2s;
-
-    &--error { border-color: $red; }
+    letter-spacing: 1px;
   }
 
   &__btn {
     background: $accent;
-    border-radius: $radius-md;
+    border-radius: $radius-pill;
     color: #fff;
-    font-size: 16px;
+    font-family: $font-body;
+    font-size: 15px;
     font-weight: 700;
-    padding: 9px 20px;
+    padding: 10px 26px;
     transition: background 0.15s, transform 0.1s;
+    white-space: nowrap;
 
     &:active {
-      transform: scale(0.96);
+      transform: scale(0.95);
       background: $accent-dark;
     }
   }

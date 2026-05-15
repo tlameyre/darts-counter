@@ -35,26 +35,34 @@ const keys = [
 .numpad {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
-  gap: 6px;
+  gap: 4px;
 
   &__key {
-    background: $card;
-    border: 1px solid $border;
-    border-radius: $radius-sm;
+    background: transparent;
+    border: none;
+    border-radius: $radius-md;
     color: $text;
-    font-size: 19px;
-    font-weight: 500;
-    padding: 11px;
+    font-family: $font-display;
+    font-size: 24px;
+    font-weight: 400;
+    padding: 10px;
     transition: background 0.1s, transform 0.08s;
 
     &:active {
-      transform: scale(0.92);
-      background: $border;
+      transform: scale(0.88);
+      background: rgba(255, 255, 255, 0.07);
     }
 
-    &--del      { font-size: 14px; color: $muted; }
-    &--validate { background: $accent; border-color: $accent; color: #fff; font-size: 16px; }
-    &--validate:active { background: $accent-dark; }
+    &--del {
+      font-family: $font-body;
+      font-size: 16px;
+      color: $muted;
+    }
+
+    &--validate {
+      color: $accent;
+      font-size: 20px;
+    }
   }
 }
 </style>

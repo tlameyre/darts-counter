@@ -6,19 +6,16 @@ defineProps({
 })
 
 defineEmits(['replay', 'home'])
-
 </script>
 
 <template>
   <div class="game-over">
-    <div class="game-over__score-wrap">
+    <div class="game-over__result">
       <div class="game-over__score">{{ correctCount }}<span>/{{ maxQuestions }}</span></div>
       <div class="game-over__label">bonnes réponses</div>
     </div>
 
-    <div class="game-over__stat">
-      Meilleure série : <strong>{{ best }}</strong>
-    </div>
+    <div class="game-over__stat">Meilleure série <strong>{{ best }}</strong></div>
 
     <div class="game-over__actions">
       <button class="game-over__btn game-over__btn--primary" @click="$emit('replay')">
@@ -33,44 +30,40 @@ defineEmits(['replay', 'home'])
 
 <style lang="scss" scoped>
 .game-over {
+  flex: 1;
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 20px;
-  padding: 32px 20px;
-  background: $card;
-  border: 1px solid $border;
-  border-radius: $radius-lg;
+  justify-content: center;
+  gap: 24px;
 
-  &__score-wrap {
-    text-align: center;
-  }
+  &__result { text-align: center; }
 
   &__score {
-    font-size: 72px;
-    font-weight: 800;
+    font-family: $font-display;
+    font-size: 80px;
     line-height: 1;
-    color: $accent;
+    color: $orange;
     font-variant-numeric: tabular-nums;
 
     span {
-      font-size: 36px;
+      font-size: 40px;
       color: $muted;
-      font-weight: 600;
     }
   }
 
   &__label {
     font-size: 14px;
     color: $muted;
-    margin-top: 6px;
+    margin-top: 4px;
+    text-transform: uppercase;
+    letter-spacing: 1px;
   }
 
   &__stat {
     font-size: 14px;
     color: $muted;
-
-    strong { color: $text; }
+    strong { color: $text; font-weight: 700; }
   }
 
   &__actions {
@@ -81,25 +74,16 @@ defineEmits(['replay', 'home'])
 
   &__btn {
     flex: 1;
-    border-radius: $radius-md;
+    border-radius: $radius-pill;
     font-size: 16px;
     font-weight: 700;
     padding: 14px;
-    transition: transform 0.1s, background 0.15s;
+    transition: transform 0.1s, opacity 0.15s;
 
-    &:active { transform: scale(0.97); }
+    &:active { transform: scale(0.97); opacity: 0.85; }
 
-    &--primary {
-      background: $accent;
-      color: #fff;
-      &:active { background: $accent-dark; }
-    }
-
-    &--secondary {
-      background: $bg;
-      border: 1px solid $border;
-      color: $muted;
-    }
+    &--primary  { background: $orange; color: #fff; }
+    &--secondary { background: $surface; border: 1px solid $border; color: $muted; }
   }
 }
 </style>
