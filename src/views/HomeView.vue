@@ -103,7 +103,6 @@ const timeOptions = [
     font-size: 58px;
     line-height: 0.9;
     color: $text;
-    letter-spacing: -1px;
   }
 
   &__settings {

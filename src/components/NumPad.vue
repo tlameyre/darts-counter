@@ -18,7 +18,7 @@ const rows = [
     { label: '9', action: () => emit('digit', '9') },
   ],
   [
-    { label: '⌫', mod: 'del',      action: () => emit('delete') },
+    { label: '⌫', mod: 'del', action: () => emit('delete') },
     { label: '0', action: () => emit('digit', '0') },
     { label: '✓', mod: 'validate', action: () => emit('validate') },
   ],
@@ -28,15 +28,9 @@ const rows = [
 <template>
   <div class="numpad">
     <div v-for="(row, ri) in rows" :key="ri" class="numpad__row">
-      <div v-if="ri > 0" class="numpad__separator" />
       <div class="numpad__row-keys">
-        <button
-          v-for="key in row"
-          :key="key.label"
-          class="numpad__key"
-          :class="key.mod && `numpad__key--${key.mod}`"
-          @click="key.action"
-        >
+        <button v-for="key in row" :key="key.label" class="numpad__key" :class="key.mod && `numpad__key--${key.mod}`"
+          @click="key.action">
           {{ key.label }}
         </button>
       </div>
@@ -47,28 +41,43 @@ const rows = [
 <style lang="scss" scoped>
 .numpad {
   display: flex;
+  flex: 1;
   flex-direction: column;
 
-  &__separator {
-    height: 1px;
-    background: $border;
-    margin: 0 -4px;
+  &__row {
+    display: flex;
+    flex: 1;
+    flex-direction: column;
+
+    // Bordure du bas sur toutes les lignes sauf la dernière
+    &:not(:last-child) .numpad__row-keys {
+      border-bottom: 1px solid $border;
+    }
   }
 
   &__row-keys {
     display: grid;
+    flex: 1;
     grid-template-columns: repeat(3, 1fr);
   }
 
   &__key {
+    display: flex;
+    align-items: center;
+    justify-content: center;
     background: transparent;
     border: none;
     color: $text;
     font-family: $font-display;
     font-size: 24px;
     font-weight: 400;
-    padding: 10px;
+    padding: 0;
     transition: background 0.1s, transform 0.08s;
+
+    // Bordure droite sur toutes les touches sauf la dernière de chaque ligne
+    &:not(:last-child) {
+      border-right: 1px solid $border;
+    }
 
     &:active {
       transform: scale(0.88);

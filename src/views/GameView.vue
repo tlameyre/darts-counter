@@ -169,7 +169,7 @@ onUnmounted(() => {
     padding: 6px 16px 10px;
     display: flex;
     flex-direction: column;
-    gap: 8px;
+    gap: 16px;
   }
 
   // Ligne TOUR X + badge timer
@@ -220,7 +220,6 @@ onUnmounted(() => {
 
 // Carte orange
 .round-card {
-  flex: 1;
   min-height: 0;
   background: $orange;
   border-radius: $radius-lg;
@@ -260,7 +259,6 @@ onUnmounted(() => {
     line-height: 1;
     color: #fff;
     font-variant-numeric: tabular-nums;
-    letter-spacing: -1px;
   }
 
   &__volee-total {

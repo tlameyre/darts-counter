@@ -10,14 +10,6 @@ defineEmits(['validate'])
 
 <template>
   <div class="answer-input" :class="{ 'answer-input--error': hasError }">
-    <!-- Icône clavier -->
-    <div class="answer-input__icon">
-      <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" opacity="0.4">
-        <rect x="2" y="4" width="4" height="4" rx="1"/><rect x="10" y="4" width="4" height="4" rx="1"/><rect x="18" y="4" width="4" height="4" rx="1"/>
-        <rect x="2" y="12" width="4" height="4" rx="1"/><rect x="10" y="12" width="4" height="4" rx="1"/><rect x="18" y="12" width="4" height="4" rx="1"/>
-        <rect x="2" y="20" width="4" height="4" rx="1"/><rect x="10" y="20" width="4" height="4" rx="1"/><rect x="18" y="20" width="4" height="4" rx="1"/>
-      </svg>
-    </div>
 
     <div class="answer-input__value" :class="{ 'answer-input__value--placeholder': !value }">
       {{ value || placeholder }}
@@ -37,7 +29,7 @@ defineEmits(['validate'])
   background: #ffffff;
   border: 3px solid transparent;
   border-radius: $radius-pill;
-  padding: 8px 8px 8px 16px;
+  padding: 4px 4px 4px 12px;
   transition: border-color 0.2s;
 
   &--error { border-color: $red; }
