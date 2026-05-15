@@ -2,31 +2,34 @@
 import { computed, onMounted, onUnmounted } from 'vue'
 import { useDarts } from '../composables/useDarts.js'
 
-import AppHeader       from '../components/AppHeader.vue'
-import ScoreDisplay    from '../components/ScoreDisplay.vue'
-import VoleeDisplay    from '../components/VoleeDisplay.vue'
-import FeedbackMessage from '../components/FeedbackMessage.vue'
-import AnswerInput     from '../components/AnswerInput.vue'
-import NumPad          from '../components/NumPad.vue'
-import TimerBar        from '../components/TimerBar.vue'
-import GameOver        from '../components/GameOver.vue'
+import AppHeader    from '../components/AppHeader.vue'
+import VoleeDisplay from '../components/VoleeDisplay.vue'
+import AnswerInput  from '../components/AnswerInput.vue'
+import NumPad       from '../components/NumPad.vue'
+import TimerBar     from '../components/TimerBar.vue'
+import GameOver     from '../components/GameOver.vue'
 
 const props = defineProps({
   settings: { type: Object, required: true },
-  // { difficulty, maxQuestions, timeLimit }
 })
 
-const emit = defineEmits(['home'])
+const emit = defineEmits(['home', 'replay'])
 
 const {
   currentScore, currentVolee, inputValue,
-  feedbackState, answered, streak, best,
+  feedbackState, streak, best,
   questionIndex, correctCount, gameOver, timeLeft,
-  correctAnswer, timerProgress, questionLabel,
+  correctAnswer, questionLabel,
   nextRound, appendDigit, deleteDigit, validate, cleanup,
 } = useDarts(props.settings)
 
 const newScore = computed(() => currentScore.value + correctAnswer.value)
+
+const feedbackLabel = computed(() => {
+  if (feedbackState.value === 'correct') return 'Correct !'
+  if (feedbackState.value === 'timeout') return 'Temps écoulé !'
+  return 'Raté !'
+})
 
 function onKeydown(e) {
   if (e.key >= '0' && e.key <= '9') appendDigit(e.key)
@@ -54,13 +57,6 @@ onUnmounted(() => {
     </AppHeader>
 
     <main class="game__main">
-      <!-- Timer -->
-      <TimerBar
-        v-if="settings.timeLimit && !gameOver"
-        :time-left="timeLeft"
-        :time-limit="settings.timeLimit"
-      />
-
       <!-- Game over -->
       <GameOver
         v-if="gameOver"
@@ -71,16 +67,45 @@ onUnmounted(() => {
         @home="emit('home')"
       />
 
-      <!-- Game -->
       <template v-else>
-        <ScoreDisplay :score="currentScore" />
-        <VoleeDisplay :volee="currentVolee" />
-
-        <FeedbackMessage
-          :state="feedbackState"
-          :new-score="newScore"
-          :correct-answer="correctAnswer"
+        <!-- Timer -->
+        <TimerBar
+          v-if="settings.timeLimit"
+          :time-left="timeLeft"
+          :time-limit="settings.timeLimit"
         />
+
+        <!-- Score + Volée -->
+        <div class="round-card">
+          <div class="round-card__score-section">
+            <div class="round-card__label">Score actuel</div>
+            <div class="round-card__score">{{ currentScore }}</div>
+          </div>
+
+          <div class="round-card__divider" />
+
+          <div class="round-card__volee-section">
+            <div class="round-card__label">Volée</div>
+            <VoleeDisplay :volee="currentVolee" />
+          </div>
+
+          <!-- Feedback overlay -->
+          <Transition name="fade">
+            <div
+              v-if="feedbackState"
+              class="round-card__overlay"
+              :class="`round-card__overlay--${feedbackState}`"
+            >
+              <div class="round-card__overlay-title">{{ feedbackLabel }}</div>
+              <div v-if="feedbackState === 'correct'" class="round-card__overlay-sub">
+                +{{ correctAnswer }} &rarr; {{ newScore }}
+              </div>
+              <div v-else class="round-card__overlay-sub">
+                La bonne réponse était <strong>{{ correctAnswer }}</strong>
+              </div>
+            </div>
+          </Transition>
+        </div>
 
         <AnswerInput
           :value="inputValue"
@@ -93,12 +118,6 @@ onUnmounted(() => {
           @delete="deleteDigit"
           @validate="validate"
         />
-
-        <Transition name="slide">
-          <button v-if="answered" class="btn-next" @click="nextRound">
-            Suivant →
-          </button>
-        </Transition>
       </template>
     </main>
   </div>
@@ -106,18 +125,21 @@ onUnmounted(() => {
 
 <style lang="scss" scoped>
 .game {
+  height: 100dvh;
+  overflow: hidden;
   display: flex;
   flex-direction: column;
   align-items: center;
-  min-height: 100dvh;
 
   &__main {
+    flex: 1;
+    min-height: 0;
     width: 100%;
     max-width: 420px;
-    padding: 20px 16px 48px;
+    padding: 14px 16px 20px;
     display: flex;
     flex-direction: column;
-    gap: 14px;
+    gap: 10px;
   }
 
   &__counter {
@@ -128,17 +150,87 @@ onUnmounted(() => {
   }
 }
 
-.btn-next {
+.round-card {
+  flex: 1;
+  min-height: 0;
   background: $card;
-  border: 1px solid $accent;
+  border: 1px solid $border;
   border-radius: $radius-lg;
-  color: $accent;
-  font-size: 17px;
-  font-weight: 700;
   padding: 16px;
-  width: 100%;
-  transition: background 0.15s, transform 0.1s;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-evenly;
+  position: relative;
+  overflow: hidden;
 
-  &:active { transform: scale(0.97); }
+  &__score-section {
+    text-align: center;
+  }
+
+  &__label {
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    color: $muted;
+    margin-bottom: 4px;
+  }
+
+  &__score {
+    font-size: 56px;
+    font-weight: 800;
+    line-height: 1;
+    font-variant-numeric: tabular-nums;
+  }
+
+  &__divider {
+    height: 1px;
+    background: $border;
+    margin: 0 -16px;
+  }
+
+  &__volee-section {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 10px;
+  }
+
+  // Feedback overlay
+  &__overlay {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    border-radius: $radius-lg;
+
+    &--correct {
+      background: rgba($accent, 0.92);
+      color: #fff;
+    }
+
+    &--wrong, &--timeout {
+      background: rgba($red, 0.92);
+      color: #fff;
+    }
+  }
+
+  &__overlay-title {
+    font-size: 28px;
+    font-weight: 800;
+  }
+
+  &__overlay-sub {
+    font-size: 16px;
+    opacity: 0.9;
+    font-weight: 500;
+
+    strong { font-weight: 800; }
+  }
 }
+
+.fade-enter-active, .fade-leave-active { transition: opacity 0.2s ease; }
+.fade-enter-from, .fade-leave-to       { opacity: 0; }
 </style>

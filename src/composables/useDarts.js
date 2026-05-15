@@ -19,7 +19,8 @@ export function useDarts({ difficulty, maxQuestions, timeLimit }) {
 
   // --- Timer ---
   const timeLeft = ref(timeLimit ?? 0)
-  let _timer = null
+  let _timer       = null
+  let _autoAdvance = null
 
   // --- Computed ---
   const correctAnswer = computed(() =>
@@ -58,15 +59,15 @@ export function useDarts({ difficulty, maxQuestions, timeLimit }) {
     }
 
     // hard
-    if (r < 0.03) return { type: 'miss',   label: 'Miss',        pts: 0       }
-    if (r < 0.38) { const n = rand20(); return { type: 'single', label: String(n), pts: n      } }
-    if (r < 0.62) { const n = rand20(); return { type: 'double', label: `D${n}`,   pts: n * 2  } }
-    if (r < 0.88) { const n = rand20(); return { type: 'triple', label: `T${n}`,   pts: n * 3  } }
+    if (r < 0.03) return { type: 'miss',   label: 'Miss',        pts: 0      }
+    if (r < 0.38) { const n = rand20(); return { type: 'single', label: String(n), pts: n     } }
+    if (r < 0.62) { const n = rand20(); return { type: 'double', label: `D${n}`,   pts: n * 2 } }
+    if (r < 0.88) { const n = rand20(); return { type: 'triple', label: `T${n}`,   pts: n * 3 } }
     if (r < 0.95) return { type: 'bull', label: 'Bull',   pts: 25 }
     return               { type: 'bull', label: 'D.Bull', pts: 50 }
   }
 
-  // --- Timer ---
+  // --- Timers ---
   function stopTimer() {
     clearInterval(_timer)
     _timer = null
@@ -85,30 +86,35 @@ export function useDarts({ difficulty, maxQuestions, timeLimit }) {
     }, 1000)
   }
 
+  function scheduleNextRound() {
+    clearTimeout(_autoAdvance)
+    _autoAdvance = setTimeout(() => {
+      if (gameOver.value) return
+      if (maxQuestions !== null && questionIndex.value >= maxQuestions) {
+        gameOver.value = true
+      } else {
+        nextRound()
+      }
+    }, 3000)
+  }
+
   function onTimeout() {
     answered.value = true
     streak.value = 0
     feedbackState.value = 'timeout'
-    // Auto-advance after 1.5s
-    setTimeout(() => {
-      if (!gameOver.value) nextRound()
-    }, 1500)
+    scheduleNextRound()
   }
 
   // --- Actions ---
   function nextRound() {
-    if (maxQuestions !== null && questionIndex.value >= maxQuestions) {
-      gameOver.value = true
-      stopTimer()
-      return
-    }
+    clearTimeout(_autoAdvance)
 
-    answered.value   = false
-    inputValue.value = ''
+    answered.value      = false
+    inputValue.value    = ''
     feedbackState.value = null
     questionIndex.value++
-    currentScore.value = Math.floor(Math.random() * 500) + 2
-    currentVolee.value = [generateDart(), generateDart(), generateDart()]
+    currentScore.value  = Math.floor(Math.random() * 500) + 2
+    currentVolee.value  = [generateDart(), generateDart(), generateDart()]
     startTimer()
   }
 
@@ -123,10 +129,7 @@ export function useDarts({ difficulty, maxQuestions, timeLimit }) {
   }
 
   function validate() {
-    if (answered.value) {
-      nextRound()
-      return
-    }
+    if (answered.value) return
 
     const userAnswer = parseInt(inputValue.value)
     if (isNaN(userAnswer)) return
@@ -147,14 +150,12 @@ export function useDarts({ difficulty, maxQuestions, timeLimit }) {
       feedbackState.value = 'wrong'
     }
 
-    // Auto-advance si c'était la dernière question
-    if (maxQuestions !== null && questionIndex.value >= maxQuestions) {
-      setTimeout(() => { gameOver.value = true }, 1200)
-    }
+    scheduleNextRound()
   }
 
   function cleanup() {
     stopTimer()
+    clearTimeout(_autoAdvance)
   }
 
   return {
