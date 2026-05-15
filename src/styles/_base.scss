@@ -1,0 +1,21 @@
+@use 'variables' as *;
+
+body {
+  background: $bg;
+  color: $text;
+  font-family: $font-stack;
+  min-height: 100dvh;
+  overflow-x: hidden;
+}
+
+// Slide transition (utilisée globalement via les composants)
+.slide-enter-active,
+.slide-leave-active {
+  transition: opacity 0.2s ease, transform 0.2s ease;
+}
+
+.slide-enter-from,
+.slide-leave-to {
+  opacity: 0;
+  transform: translateY(-8px);
+}

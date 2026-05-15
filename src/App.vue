@@ -1,0 +1,103 @@
+<script setup>
+import { computed, onMounted, onUnmounted } from 'vue'
+import { useDarts } from './composables/useDarts.js'
+
+import AppHeader         from './components/AppHeader.vue'
+import DifficultySelector from './components/DifficultySelector.vue'
+import ScoreDisplay      from './components/ScoreDisplay.vue'
+import VoleeDisplay      from './components/VoleeDisplay.vue'
+import FeedbackMessage   from './components/FeedbackMessage.vue'
+import AnswerInput       from './components/AnswerInput.vue'
+import NumPad            from './components/NumPad.vue'
+
+const {
+  difficulty, currentScore, currentVolee,
+  inputValue, feedbackState, answered,
+  streak, best, correctAnswer,
+  setDifficulty, nextRound,
+  appendDigit, deleteDigit, validate,
+} = useDarts()
+
+const newScore = computed(() => currentScore.value + correctAnswer.value)
+
+function onKeydown(e) {
+  if (e.key >= '0' && e.key <= '9') appendDigit(e.key)
+  else if (e.key === 'Backspace') deleteDigit()
+  else if (e.key === 'Enter') validate()
+}
+
+onMounted(() => {
+  nextRound()
+  window.addEventListener('keydown', onKeydown)
+})
+
+onUnmounted(() => window.removeEventListener('keydown', onKeydown))
+</script>
+
+<template>
+  <div class="layout">
+    <AppHeader :streak="streak" :best="best" />
+
+    <main class="layout__main">
+      <DifficultySelector v-model="difficulty" @update:modelValue="setDifficulty" />
+      <ScoreDisplay :score="currentScore" />
+      <VoleeDisplay :volee="currentVolee" />
+
+      <FeedbackMessage
+        :state="feedbackState"
+        :new-score="newScore"
+        :correct-answer="correctAnswer"
+      />
+
+      <AnswerInput
+        :value="inputValue"
+        :has-error="feedbackState === 'wrong'"
+        @validate="validate"
+      />
+
+      <NumPad
+        @digit="appendDigit"
+        @delete="deleteDigit"
+        @validate="validate"
+      />
+
+      <Transition name="slide">
+        <button v-if="answered" class="btn-next" @click="nextRound">
+          Suivant →
+        </button>
+      </Transition>
+    </main>
+  </div>
+</template>
+
+<style lang="scss" scoped>
+.layout {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  min-height: 100dvh;
+
+  &__main {
+    width: 100%;
+    max-width: 420px;
+    padding: 20px 16px 48px;
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+  }
+}
+
+.btn-next {
+  background: $card;
+  border: 1px solid $accent;
+  border-radius: $radius-lg;
+  color: $accent;
+  font-size: 17px;
+  font-weight: 700;
+  padding: 16px;
+  width: 100%;
+  transition: background 0.15s, transform 0.1s;
+
+  &:active { transform: scale(0.97); }
+}
+</style>
