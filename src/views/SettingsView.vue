@@ -1,8 +1,13 @@
 <script setup>
 import { reactive } from 'vue'
+import AppHeader      from '../components/AppHeader.vue'
 import OptionSelector from '../components/OptionSelector.vue'
 
-const emit = defineEmits(['start'])
+const props = defineProps({
+  mode: { type: Object, required: true },
+})
+
+const emit = defineEmits(['start', 'back'])
 
 const settings = reactive({
   difficulty:       'easy',
@@ -31,83 +36,83 @@ const timeOptions = [
 </script>
 
 <template>
-  <div class="home">
-    <div class="home__hero">
-      <span class="home__sub">TRAINING</span>
-      <h1 class="home__title">DARTS<br>COUNTER</h1>
-    </div>
+  <div class="settings">
+    <AppHeader :title="mode.title.replace('\n', ' ')" @back="emit('back')" />
 
-    <div class="home__settings">
-      <div class="home__card">
-        <OptionSelector label="Difficulté des volées" :options="difficultyOptions" v-model="settings.difficulty" />
-      </div>
-      <div class="home__card">
-        <OptionSelector label="Nombre de questions" :options="questionOptions" v-model="settings.maxQuestions" />
-      </div>
-      <div class="home__card">
-        <OptionSelector label="Temps par question" :options="timeOptions" v-model="settings.timeLimit" />
+    <main class="settings__main">
+      <div class="settings__cards">
+        <div class="settings__card">
+          <OptionSelector
+            label="Difficulté des volées"
+            :options="difficultyOptions"
+            v-model="settings.difficulty"
+          />
+        </div>
+        <div class="settings__card">
+          <OptionSelector
+            label="Nombre de questions"
+            :options="questionOptions"
+            v-model="settings.maxQuestions"
+          />
+        </div>
+        <div class="settings__card">
+          <OptionSelector
+            label="Temps par question"
+            :options="timeOptions"
+            v-model="settings.timeLimit"
+          />
+        </div>
+
+        <!-- Double calcul toggle -->
+        <button
+          class="settings__toggle"
+          :class="{ 'settings__toggle--on': settings.doubleValidation }"
+          @click="settings.doubleValidation = !settings.doubleValidation"
+        >
+          <div class="settings__toggle-text">
+            <span class="settings__toggle-title">Double calcul</span>
+            <span class="settings__toggle-desc">
+              Après une bonne réponse, calcule aussi le score restant
+            </span>
+          </div>
+          <div
+            class="settings__toggle-switch"
+            :class="{ 'settings__toggle-switch--on': settings.doubleValidation }"
+          >
+            <div class="settings__toggle-knob" />
+          </div>
+        </button>
       </div>
 
-      <!-- Double calcul toggle -->
-      <button
-        class="home__toggle"
-        :class="{ 'home__toggle--on': settings.doubleValidation }"
-        @click="settings.doubleValidation = !settings.doubleValidation"
-      >
-        <div class="home__toggle-text">
-          <span class="home__toggle-title">Double calcul</span>
-          <span class="home__toggle-desc">
-            Après une bonne réponse, calcule aussi le score restant
-          </span>
-        </div>
-        <div class="home__toggle-switch" :class="{ 'home__toggle-switch--on': settings.doubleValidation }">
-          <div class="home__toggle-knob" />
-        </div>
-      </button>
-      <button class="home__start" @click="emit('start', { ...settings })">
+      <button class="settings__start" @click="emit('start', { ...settings })">
         JOUER
       </button>
-    </div>
-
+    </main>
   </div>
 </template>
 
 <style lang="scss" scoped>
-.home {
+.settings {
   display: flex;
   flex-direction: column;
   min-height: 100dvh;
-  padding:$padding-xxl $padding-md;
-  max-width: 420px;
-  margin: 0 auto;
 
-  &__hero {
-    // flex: 1;
+  &__main {
+    flex: 1;
     display: flex;
     flex-direction: column;
-    gap: 8px;
+    justify-content: space-between;
+    max-width: 420px;
+    width: 100%;
+    margin: 0 auto;
+    padding: $padding-xs $padding-md $padding-xl;
+    gap: $padding-lg;
   }
 
-  &__sub {
-    font-size: $text-xs;
-    font-weight: 700;
-    letter-spacing: 2px;
-    color: $orange;
-    text-transform: uppercase;
-  }
-
-  &__title {
-    font-family: $font-display;
-    font-size: $title-xl;
-    line-height: 0.9;
-    letter-spacing: 1px;
-    color: $text-color;
-  }
-
-  &__settings {
+  &__cards {
     display: flex;
     flex-direction: column;
-    gap: 12px;
+    gap: $padding-xs;
     flex: 1;
     justify-content: center;
   }
@@ -119,15 +124,15 @@ const timeOptions = [
     padding: $padding-sm;
   }
 
-  // Double calcul toggle row
+  // Toggle double calcul
   &__toggle {
     background: $surface;
     border: 1px solid $border;
     border-radius: $radius-lg;
-    padding: $padding-md;
+    padding: $padding-sm $padding-md;
     display: flex;
     align-items: center;
-    gap: 14px;
+    gap: $padding-sm;
     text-align: left;
     transition: border-color 0.2s;
 
@@ -141,7 +146,7 @@ const timeOptions = [
     font-size: $text-sm;
     font-weight: 700;
     color: $text-color;
-    margin-bottom: 2px;
+    margin-bottom: $padding-xxs;
   }
 
   &__toggle-desc {
@@ -177,11 +182,10 @@ const timeOptions = [
     border-radius: 50%;
     transition: transform 0.2s;
 
-    .home__toggle-switch--on & { transform: translateX(18px); }
+    .settings__toggle-switch--on & { transform: translateX(18px); }
   }
 
   &__start {
-    margin-top: 32px;
     background: $orange;
     border-radius: $radius-pill;
     color: $white;

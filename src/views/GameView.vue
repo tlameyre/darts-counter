@@ -12,7 +12,7 @@ const props = defineProps({
   settings: { type: Object, required: true },
 })
 
-const emit = defineEmits(['home', 'replay'])
+const emit = defineEmits(['home', 'back', 'replay'])
 
 const {
   currentScore, currentVolee, inputValue,
@@ -58,7 +58,7 @@ onUnmounted(() => {
 
 <template>
   <div class="game">
-    <AppHeader title="ENTRAINEMENT" @back="emit('home')" />
+    <AppHeader title="ENTRAINEMENT" @back="emit('back')" />
 
     <main class="game__main">
       <GameOver
