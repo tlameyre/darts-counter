@@ -71,6 +71,23 @@ onUnmounted(() => {
       />
 
       <template v-else>
+        <!-- TOUR X + badge timer -->
+        <div class="game__tour-row">
+          <span class="game__tour-label">
+            TOUR {{ questionLabel }}
+          </span>
+          <div v-if="settings.doubleValidation" class="game__phase-badge">
+            Phase {{ phase }}/2
+          </div>
+          <div v-if="settings.timeLimit" class="game__timer-badge"
+            :class="timeLeft <= 5 && 'game__timer-badge--urgent'">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <circle cx="12" cy="12" r="10" />
+              <polyline points="12 6 12 12 16 14" />
+            </svg>
+            {{ timeLeft }}S
+          </div>
+        </div>
         <!-- Carte score + volée -->
         <div class="round-card">
           <!-- Phase 1 : score + volée -->
@@ -117,22 +134,6 @@ onUnmounted(() => {
           </Transition>
         </div>
 
-        <!-- TOUR X + badge timer -->
-        <div class="game__tour-row">
-          <span class="game__tour-label">
-            TOUR {{ questionLabel }}
-          </span>
-          <div v-if="settings.timeLimit" class="game__timer-badge" :class="timeLeft <= 5 && 'game__timer-badge--urgent'">
-            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/>
-            </svg>
-            {{ timeLeft }}S
-          </div>
-          <div v-if="settings.doubleValidation" class="game__phase-badge">
-            Phase {{ phase }}/2
-          </div>
-        </div>
-
         <AnswerInput
           :value="inputValue"
           :placeholder="phaseLabel"
@@ -163,7 +164,7 @@ onUnmounted(() => {
     min-height: 0;
     width: 100%;
     max-width: 420px;
-    padding: $padding-xs $padding-md $padding-xs;
+    padding: $padding-md;
     display: flex;
     flex-direction: column;
     gap: 16px;
@@ -173,12 +174,13 @@ onUnmounted(() => {
   &__tour-row {
     display: flex;
     align-items: center;
+    justify-content: space-between;
     gap: 10px;
   }
 
   &__tour-label {
     font-family: $font-display;
-    font-size: $title-xxs;
+    font-size: $title-sm;
     color: $orange;
     letter-spacing: 1px;
   }
@@ -187,7 +189,7 @@ onUnmounted(() => {
     display: flex;
     align-items: center;
     gap: 5px;
-    background: $surface2;
+    background: $surface;
     border: 1px solid $border;
     border-radius: $radius-pill;
     padding: $padding-xxs $padding-sm;
@@ -237,13 +239,13 @@ onUnmounted(() => {
     font-size: $text-xs;
     text-transform: uppercase;
     letter-spacing: 1.5px;
-    color: rgba($white, 0.55);
+    color: $white;
     margin-bottom: 2px;
 
     &--question {
       font-size: $text-md;
       letter-spacing: 0.5px;
-      color: rgba($white, 0.9);
+      color: $white;
       font-weight: 700;
       margin-top: 6px;
       text-transform: none;
@@ -267,7 +269,7 @@ onUnmounted(() => {
 
   &__divider {
     height: 1px;
-    background: rgba($white, 0.2);
+    background: $muted;
     margin: 0 $padding-lg;
   }
 
@@ -304,7 +306,7 @@ onUnmounted(() => {
 
   &__overlay-sub {
     font-size: $text-md;
-    color: rgba($white, 0.9);
+    color: $white;
     font-weight: 600;
     strong { font-weight: 800; color: $white; }
   }

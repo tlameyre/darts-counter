@@ -3,9 +3,8 @@ $font-body:    'Geist', -apple-system, BlinkMacSystemFont, sans-serif;
 $font-display: 'Bulevar', sans-serif;
 
 // Backgrounds — dark forest green (DA DartCounter)
-$bg:       #101c14;
-$surface:  #1a2b1d;
-$surface2: #223026;
+$bg:       #121A18;
+$surface:  #192422;
 $border:   rgba(255, 255, 255, 0.08);
 
 // Brand — orange
@@ -13,7 +12,7 @@ $orange:      #D64A24;
 $orange-dark: #B83D1C;
 
 // Accent — green (correct / submit)
-$accent:       #2ACE82;
+$accent:       #36cc86;
 $accent-dark:  #16a34a;
 $accent-light: #86efac;
 
@@ -25,7 +24,7 @@ $error-light: #fca5a5;
 // Text
 $white:      #ffffff;
 $text-color: #ffffff;
-$muted:      rgba(255, 255, 255, 0.40);
+$muted:      rgba(255, 255, 255, 0.471);
 
 // Input (pill blanc)
 $input-bg:          #ffffff;
@@ -53,7 +52,7 @@ $title-xxl: 72px;
 
 // Dartboard chip colors (fidèle aux couleurs de la cible)
 $dart-red:        #B21327;  // double/triple secteurs rouges + double bull
-$dart-green:      #2ACE82;  // double/triple secteurs verts + outer bull
+$dart-green:      #36cc86;  // double/triple secteurs verts + outer bull
 $dart-black:      #000000;  // simple secteurs rouges
 $dart-cream:      #f0e8d0;  // simple secteurs verts
 $dart-cream-text: #111111;  // texte sur fond crème

@@ -25,7 +25,7 @@ defineProps({
 
   &__plus {
     color: $muted;
-    font-size: 16px;
+    font-size: $text-sm;
     font-weight: 300;
     flex-shrink: 0;
   }

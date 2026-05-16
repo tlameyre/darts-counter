@@ -15,16 +15,13 @@ defineEmits(['back'])
     </button>
 
     <h1 class="app-header__title">{{ title }}</h1>
-
-    <!-- Espace pour équilibrer -->
-    <div class="app-header__spacer" />
   </header>
 </template>
 
 <style lang="scss" scoped>
 .app-header {
   width: 100%;
-  padding: $padding-sm $padding-lg $padding-xs;
+  padding: $padding-md $padding-md 0;
   display: grid;
   grid-template-columns: 40px 1fr 40px;
   align-items: center;
@@ -42,7 +39,7 @@ defineEmits(['back'])
 
   &__title {
     font-family: $font-display;
-    font-size: $title-xxs;
+    font-size: $title-md;
     font-weight: 400;
     letter-spacing: 1px;
     color: $text-color;
@@ -51,7 +48,5 @@ defineEmits(['back'])
     overflow: hidden;
     text-overflow: ellipsis;
   }
-
-  &__spacer { width: 40px; }
 }
 </style>

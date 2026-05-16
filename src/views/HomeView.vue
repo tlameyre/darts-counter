@@ -64,11 +64,11 @@ const timeOptions = [
           <div class="home__toggle-knob" />
         </div>
       </button>
+      <button class="home__start" @click="emit('start', { ...settings })">
+        JOUER
+      </button>
     </div>
 
-    <button class="home__start" @click="emit('start', { ...settings })">
-      JOUER
-    </button>
   </div>
 </template>
 
@@ -77,23 +77,21 @@ const timeOptions = [
   display: flex;
   flex-direction: column;
   min-height: 100dvh;
-  padding: 0 $padding-md $padding-xxl;
+  padding:$padding-xxl $padding-md;
   max-width: 420px;
   margin: 0 auto;
 
   &__hero {
-    flex: 1;
+    // flex: 1;
     display: flex;
     flex-direction: column;
-    justify-content: center;
-    padding: $padding-xxl 0 $padding-xxl;
-    gap: 4px;
+    gap: 8px;
   }
 
   &__sub {
     font-size: $text-xs;
     font-weight: 700;
-    letter-spacing: 3px;
+    letter-spacing: 2px;
     color: $orange;
     text-transform: uppercase;
   }
@@ -102,20 +100,23 @@ const timeOptions = [
     font-family: $font-display;
     font-size: $title-xl;
     line-height: 0.9;
+    letter-spacing: 1px;
     color: $text-color;
   }
 
   &__settings {
     display: flex;
     flex-direction: column;
-    gap: 10px;
+    gap: 12px;
+    flex: 1;
+    justify-content: center;
   }
 
   &__card {
     background: $surface;
     border: 1px solid $border;
     border-radius: $radius-lg;
-    padding: $padding-md;
+    padding: $padding-sm;
   }
 
   // Double calcul toggle row
@@ -153,7 +154,7 @@ const timeOptions = [
   &__toggle-switch {
     width: 44px;
     height: 26px;
-    background: $surface2;
+    background: $surface;
     border: 1px solid $border;
     border-radius: $radius-pill;
     position: relative;
@@ -180,13 +181,13 @@ const timeOptions = [
   }
 
   &__start {
-    margin-top: 20px;
+    margin-top: 32px;
     background: $orange;
     border-radius: $radius-pill;
     color: $white;
     font-family: $font-display;
-    font-size: $title-xs;
-    letter-spacing: 3px;
+    font-size: $title-sm;
+    letter-spacing: 2px;
     padding: $padding-md;
     width: 100%;
     transition: background 0.15s, transform 0.1s;

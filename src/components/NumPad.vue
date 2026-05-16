@@ -51,7 +51,7 @@ const rows = [
 
     // Bordure du bas sur toutes les lignes sauf la dernière
     &:not(:last-child) .numpad__row-keys {
-      border-bottom: 1px solid $border;
+      border-bottom: 1px solid $muted;
     }
   }
 
@@ -76,7 +76,7 @@ const rows = [
 
     // Bordure droite sur toutes les touches sauf la dernière de chaque ligne
     &:not(:last-child) {
-      border-right: 1px solid $border;
+      border-right: 1px solid $muted;
     }
 
     &:active {
@@ -86,14 +86,14 @@ const rows = [
 
     &--del {
       font-family: $font-body;
-      font-size: $text-md;
-      color: $muted;
+      font-size: $title-sm;
+      color: $white;
     }
 
     &--validate {
       color: $accent;
       font-family: $font-body;
-      font-size: $text-lg;
+      font-size: $title-sm;
     }
   }
 }
