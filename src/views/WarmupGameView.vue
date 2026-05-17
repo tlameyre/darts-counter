@@ -236,7 +236,7 @@ onUnmounted(() => {
           <button v-for="n in row" :key="n" class="warmup__cell" :style="cellStyle(n)"
             :class="{ 'warmup__cell--pressed': pressedKey === `s-${n}` }" @click="tapSector(n)">
             <span class="warmup__cell-num">{{ n }}</span>
-            <span class="warmup__cell-pts">{{ n * currentMultiplier }}</span>
+            <span v-if="activeTab !== 'single'" class="warmup__cell-pts">{{ n * currentMultiplier }}</span>
           </button>
         </template>
       </div>
