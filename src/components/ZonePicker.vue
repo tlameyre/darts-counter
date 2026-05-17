@@ -14,6 +14,7 @@ const TYPES_NUM  = [
   { id: 'S', label: 'Simple' },
   { id: 'D', label: 'Double' },
   { id: 'T', label: 'Triple' },
+  { id: 'A', label: 'Tout'   },
 ]
 const TYPES_BULL = [
   { id: 'SB', label: 'Outer (25)' },
@@ -32,7 +33,7 @@ const availableTypes = computed(() =>
 function selectSector(sector) {
   let type = props.modelValue.type
   if (sector === null && !['B', 'SB'].includes(type)) type = 'B'
-  if (sector !== null && !['S', 'D', 'T'].includes(type))  type = 'D'
+  if (sector !== null && !['S', 'D', 'T', 'A'].includes(type)) type = 'D'
   emit('update:modelValue', { sector, type })
 }
 
