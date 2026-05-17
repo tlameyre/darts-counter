@@ -90,10 +90,10 @@ function selectMode(mode) {
 
   &__title {
     font-family: $font-display;
-    font-size: $title-xs;
+    font-size: $title-sm;
     line-height: 1;
     color: $white;
-    white-space: pre-line;
+    letter-spacing: 1px;
   }
 
   &__desc {

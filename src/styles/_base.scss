@@ -19,22 +19,43 @@
 
 // --- Fonts ---
 @font-face {
-  font-family: 'Bulevar';
-  src: url('/fonts/bulevar.woff2') format('woff2');
+  font-family: 'Noka';
+  src: url('/fonts/noka-bold.otf') format('opentype');
+  font-weight: 700;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'Fredoka';
+  src: url('/fonts/fredoka-light.ttf') format('truetype');
+  font-weight: 300;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'Fredoka';
+  src: url('/fonts/fredoka-regular.ttf') format('truetype');
   font-weight: 400;
   font-display: swap;
 }
 
 @font-face {
-  font-family: 'Geist';
-  src: url('/fonts/geist-regular.woff2') format('woff2');
-  font-weight: 400;
+  font-family: 'Fredoka';
+  src: url('/fonts/fredoka-medium.ttf') format('truetype');
+  font-weight: 500;
   font-display: swap;
 }
 
 @font-face {
-  font-family: 'Geist';
-  src: url('/fonts/geist-bold.woff2') format('woff2');
+  font-family: 'Fredoka';
+  src: url('/fonts/fredoka-semibold.ttf') format('truetype');
+  font-weight: 600;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'Fredoka';
+  src: url('/fonts/fredoka-bold.ttf') format('truetype');
   font-weight: 700;
   font-display: swap;
 }

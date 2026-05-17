@@ -78,9 +78,13 @@ export function useWarmup({ duration, trainZone }) {
     clearInterval(_timer)
   }
 
+  const totalScore = computed(() =>
+    darts.value.reduce((sum, d) => sum + d.pts, 0)
+  )
+
   return {
     darts, timeLeft, timeDisplay, isUrgent, gameOver,
-    totalDarts, hits, accuracy, breakdown,
+    totalDarts, hits, accuracy, totalScore, breakdown,
     recordDart, undoLast, startTimer, endSession, cleanup,
   }
 }

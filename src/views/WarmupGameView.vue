@@ -1,28 +1,29 @@
 <script setup>
-import { ref, computed, onMounted, onUnmounted } from 'vue'
-import { useRouter }    from 'vue-router'
+import { ref, computed, watch, onMounted, onUnmounted } from 'vue'
+import { useRouter } from 'vue-router'
 import { gameSettings } from '../store/gameStore.js'
 import { useWarmup }    from '../composables/useWarmup.js'
-import AppHeader        from '../components/AppHeader.vue'
 
 const router = useRouter()
 
 const {
   timeDisplay, isUrgent, gameOver,
-  totalDarts, hits, accuracy,
-  recordDart, undoLast, startTimer, endSession, cleanup,
+  totalDarts, hits, accuracy, totalScore,
+  darts, recordDart, undoLast, startTimer, endSession, cleanup,
 } = useWarmup(gameSettings.value)
 
-// --- Onglet actif : single / double / triple ---
+// --- Dartboard red/green sector mapping ---
+const RED_NUMBERS = new Set([20, 18, 13, 10, 2, 3, 7, 8, 14, 12])
+
+// --- Active multiplier tab ---
 const activeTab = ref('single')
 
 const TABS = [
-  { id: 'single', label: 'Simple',  multiplier: 1 },
-  { id: 'double', label: 'Double',  multiplier: 2 },
-  { id: 'triple', label: 'Triple',  multiplier: 3 },
+  { id: 'single', label: 'S', multiplier: 1 },
+  { id: 'double', label: 'D', multiplier: 2 },
+  { id: 'triple', label: 'T', multiplier: 3 },
 ]
 
-// Grille 1-20 organisée en 4 lignes de 5
 const GRID_ROWS = [
   [1, 2, 3, 4, 5],
   [6, 7, 8, 9, 10],
@@ -34,19 +35,64 @@ const currentMultiplier = computed(
   () => TABS.find(t => t.id === activeTab.value)?.multiplier ?? 1
 )
 
-// Libellé de la zone entraînée
 const ZONE_LABELS = {
-  single: 'Simple',
-  double: 'Double',
-  triple: 'Triple',
-  bull:   'Bull (50)',
-  outer:  'Outer (25)',
+  single: 'Simple', double: 'Double', triple: 'Triple',
+  bull: 'Bull (50)', outer: 'Outer (25)',
 }
-const zoneLabel = computed(() => ZONE_LABELS[gameSettings.value.trainZone] ?? '')
+const zoneLabel = computed(() => ZONE_LABELS[gameSettings.value?.trainZone] ?? '')
+
+// --- Tour tracking (3 darts = 1 tour) ---
+const justCompleted = ref(false)
+let _justCompletedTimer = null
+
+watch(() => darts.value.length, (newLen, oldLen) => {
+  clearTimeout(_justCompletedTimer)
+  if (newLen > oldLen && newLen > 0 && newLen % 3 === 0) {
+    justCompleted.value = true
+    _justCompletedTimer = setTimeout(() => { justCompleted.value = false }, 700)
+  } else if (newLen < oldLen) {
+    justCompleted.value = false
+  }
+})
+
+const tourNumber = computed(() => {
+  if (justCompleted.value) return Math.floor(darts.value.length / 3)
+  return Math.floor(darts.value.length / 3) + 1
+})
+
+const displayedDarts = computed(() => {
+  if (darts.value.length === 0) return []
+  if (justCompleted.value) return darts.value.slice(-3)
+  const inTurn = darts.value.length % 3
+  return inTurn > 0 ? darts.value.slice(-inTurn) : []
+})
+
+// --- Visual feedback on tap ---
+const pressedKey = ref(null)
+let _pressTimer = null
+
+function flash(key) {
+  clearTimeout(_pressTimer)
+  pressedKey.value = key
+  _pressTimer = setTimeout(() => { pressedKey.value = null }, 160)
+}
+
+// --- Cell colors (dartboard-accurate) ---
+function cellStyle(sector) {
+  if (activeTab.value === 'single') {
+    return RED_NUMBERS.has(sector)
+      ? { background: '#000000', color: '#ffffff' }
+      : { background: '#f0e8d0', color: '#111111' }
+  }
+  return RED_NUMBERS.has(sector)
+    ? { background: '#B21327', color: '#ffffff' }
+    : { background: '#36cc86', color: '#ffffff' }
+}
 
 // --- Actions ---
 function tapSector(sector) {
   const tab = TABS.find(t => t.id === activeTab.value)
+  flash(`s-${sector}`)
   recordDart({
     type:   tab.id,
     sector,
@@ -56,88 +102,150 @@ function tapSector(sector) {
 }
 
 function tapBull() {
+  flash('bull')
   recordDart({ type: 'bull', sector: null, pts: 50, label: 'Bull' })
 }
 
 function tapOuter() {
+  flash('outer')
   recordDart({ type: 'bull', sector: null, pts: 25, label: 'Outer' })
 }
 
 function tapMiss() {
+  flash('miss')
   recordDart({ type: 'miss', sector: null, pts: 0, label: 'Miss' })
 }
 
 onMounted(() => startTimer())
-onUnmounted(() => cleanup())
+onUnmounted(() => {
+  cleanup()
+  clearTimeout(_justCompletedTimer)
+  clearTimeout(_pressTimer)
+})
 </script>
 
 <template>
   <div class="warmup">
+
     <!-- Header -->
-    <AppHeader title="ECHAUFFEMENT" @back="router.push({ name: 'warmup-settings' })">
-      <template #right>
-        <div class="warmup__timer" :class="{ 'warmup__timer--urgent': isUrgent }">
-          {{ timeDisplay }}
-        </div>
-      </template>
-    </AppHeader>
+    <header class="warmup__header">
+      <button class="warmup__header-btn" @click="router.push({ name: 'warmup-settings' })">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none">
+          <path d="M19 12H12M15 9L12 12L15 15" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+          <path d="M19 6V5C19 3.89543 18.1046 3 17 3H7C5.89543 3 5 3.89543 5 5V19C5 20.1046 5.89543 21 7 21H17C18.1046 21 19 20.1046 19 19V18" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+      </button>
+      <h1 class="warmup__header-title">ECHAUFFEMENT</h1>
+      <button class="warmup__header-btn" @click="router.push({ name: 'warmup-settings' })">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none">
+          <path d="M9.71622 2.75625C9.82872 2.20125 10.32 1.8 10.89 1.8H13.1325C13.7025 1.8 14.1937 2.20125 14.3062 2.75625L14.85 5.38125C15.3787 5.60625 15.8737 5.895 16.3237 6.23625L18.8662 5.3925C19.4062 5.2125 19.9987 5.4375 20.2837 5.9325L21.405 7.875C21.69 8.37 21.5887 8.9925 21.1612 9.37125L19.1625 11.1487C19.1962 11.4262 19.2112 11.7112 19.2112 12C19.2112 12.2887 19.1925 12.5737 19.1625 12.8512L21.165 14.6325C21.5925 15.0112 21.69 15.6375 21.4087 16.1287L20.2875 18.0712C20.0025 18.5625 19.41 18.7912 18.87 18.6112L16.3275 17.7675C15.8737 18.1087 15.3787 18.3937 14.8537 18.6225L14.3137 21.2437C14.1975 21.8025 13.7062 22.2 13.14 22.2H10.8975C10.3275 22.2 9.83622 21.7987 9.72372 21.2437L9.18372 18.6225C8.65497 18.3975 8.16372 18.1087 7.70997 17.7675L5.15622 18.6112C4.61622 18.7912 4.02372 18.5662 3.73872 18.0712L2.61747 16.1287C2.33247 15.6337 2.43372 15.0112 2.86122 14.6325L4.86372 12.8512C4.82997 12.5737 4.81497 12.2887 4.81497 12C4.81497 11.7112 4.83372 11.4262 4.86372 11.1487L2.86122 9.3675C2.43372 8.98875 2.33622 8.3625 2.61747 7.87125L3.73872 5.92875C4.02372 5.43375 4.61622 5.20875 5.15622 5.38875L7.69872 6.2325C8.15247 5.89125 8.64747 5.60625 9.17247 5.3775L9.71622 2.75625ZM12.0112 15C13.6687 14.9925 15.0075 13.6462 15 11.9887C14.9925 10.3312 13.6462 8.9925 11.9887 9C10.3312 9.0075 8.99247 10.3537 8.99997 12.0112C9.00747 13.6687 10.3537 15.0075 12.0112 15Z" fill="currentColor"/>
+        </svg>
+      </button>
+    </header>
 
     <!-- Écran de jeu -->
     <div v-if="!gameOver" class="warmup__game">
-      <!-- Carte stats -->
+
+      <!-- Carte stats bleue -->
       <div class="warmup__card">
-        <div class="warmup__card-zone">{{ zoneLabel }}</div>
-        <div class="warmup__card-stats">
-          <div class="warmup__stat">
-            <span class="warmup__stat-value">{{ hits }}/{{ totalDarts }}</span>
-            <span class="warmup__stat-label">touches</span>
+        <div class="warmup__card-big">{{ totalScore }}</div>
+        <div class="warmup__card-rows">
+          <div class="warmup__card-row">
+            <span class="warmup__card-lbl">Fléchettes jetées</span>
+            <span class="warmup__card-val">{{ totalDarts }}</span>
           </div>
-          <div class="warmup__stat-divider" />
-          <div class="warmup__stat">
-            <span class="warmup__stat-value">{{ accuracy }}%</span>
-            <span class="warmup__stat-label">précision</span>
+          <div class="warmup__card-row">
+            <span class="warmup__card-lbl">Fléchettes touchées</span>
+            <span class="warmup__card-val">{{ hits }}</span>
+          </div>
+          <div class="warmup__card-row">
+            <span class="warmup__card-lbl">Taux de réussite</span>
+            <span class="warmup__card-val">{{ accuracy }}%</span>
           </div>
         </div>
       </div>
 
-      <!-- Onglets Single / Double / Triple -->
-      <div class="warmup__tabs">
-        <button
-          v-for="tab in TABS"
-          :key="tab.id"
-          class="warmup__tab"
-          :class="{ 'warmup__tab--active': activeTab === tab.id }"
-          @click="activeTab = tab.id"
-        >
-          {{ tab.label }}
-        </button>
-        <button class="warmup__tab warmup__tab--bull" @click="tapBull">Bull<br><span>50</span></button>
-        <button class="warmup__tab warmup__tab--outer" @click="tapOuter">Outer<br><span>25</span></button>
+      <!-- Ligne TOUR + timer -->
+      <div class="warmup__tour-row">
+        <span class="warmup__tour-label">TOUR {{ tourNumber }}</span>
+        <div class="warmup__timer" :class="{ 'warmup__timer--urgent': isUrgent }">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/>
+          </svg>
+          {{ timeDisplay }}
+        </div>
       </div>
 
-      <!-- Grille de nombres -->
-      <div class="warmup__grid">
-        <template v-for="row in GRID_ROWS" :key="row[0]">
+      <!-- Pill slots des 3 fléchettes -->
+      <div class="warmup__slots">
+        <div class="warmup__slots-icon">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
+            <path d="M19.2 12C19.2 8.02499 15.975 4.79999 12 4.79999C8.02499 4.79999 4.79999 8.02499 4.79999 12C4.79999 15.975 8.02499 19.2 12 19.2C15.975 19.2 19.2 15.975 19.2 12ZM2.39999 12C2.39999 6.69749 6.69749 2.39999 12 2.39999C17.3025 2.39999 21.6 6.69749 21.6 12C21.6 17.3025 17.3025 21.6 12 21.6C6.69749 21.6 2.39999 17.3025 2.39999 12ZM12 15C13.6575 15 15 13.6575 15 12C15 10.3425 13.6575 8.99999 12 8.99999C10.3425 8.99999 8.99999 10.3425 8.99999 12C8.99999 13.6575 10.3425 15 12 15ZM12 6.59999C14.9812 6.59999 17.4 9.01874 17.4 12C17.4 14.9812 14.9812 17.4 12 17.4C9.01874 17.4 6.59999 14.9812 6.59999 12C6.59999 9.01874 9.01874 6.59999 12 6.59999ZM10.8 12C10.8 11.3362 11.3362 10.8 12 10.8C12.6637 10.8 13.2 11.3362 13.2 12C13.2 12.6637 12.6637 13.2 12 13.2C11.3362 13.2 10.8 12.6637 10.8 12Z" fill="#333"/>
+          </svg>
+        </div>
+        <div class="warmup__slots-sep"/>
+        <div class="warmup__slot" v-for="i in 3" :key="i">
+          <Transition name="slot-pop">
+            <span v-if="displayedDarts[i - 1]" :key="displayedDarts[i - 1].ts">
+              {{ displayedDarts[i - 1].pts }}
+            </span>
+          </Transition>
+        </div>
+      </div>
+
+      <!-- Grille -->
+      <div class="warmup__grid-wrap">
+        <!-- Header S / D / T / SB / B -->
+        <div class="warmup__grid-header">
           <button
-            v-for="n in row"
-            :key="n"
-            class="warmup__cell"
-            @click="tapSector(n)"
-          >
-            <span class="warmup__cell-num">{{ n }}</span>
-            <span class="warmup__cell-pts">{{ n * currentMultiplier }}</span>
-          </button>
-        </template>
+            v-for="tab in TABS"
+            :key="tab.id"
+            class="warmup__gtab"
+            :class="{ 'warmup__gtab--active': activeTab === tab.id }"
+            @click="activeTab = tab.id"
+          >{{ tab.label }}</button>
+          <button
+            class="warmup__gtab warmup__gtab--sb"
+            :class="{ 'warmup__gtab--pressed': pressedKey === 'outer' }"
+            @click="tapOuter"
+          >SB</button>
+          <button
+            class="warmup__gtab warmup__gtab--b"
+            :class="{ 'warmup__gtab--pressed': pressedKey === 'bull' }"
+            @click="tapBull"
+          >B</button>
+        </div>
+
+        <!-- Nombres 1–20 -->
+        <div class="warmup__grid">
+          <template v-for="row in GRID_ROWS" :key="row[0]">
+            <button
+              v-for="n in row"
+              :key="n"
+              class="warmup__cell"
+              :style="cellStyle(n)"
+              :class="{ 'warmup__cell--pressed': pressedKey === `s-${n}` }"
+              @click="tapSector(n)"
+            >
+              <span class="warmup__cell-num">{{ n }}</span>
+              <span class="warmup__cell-pts">{{ n * currentMultiplier }}</span>
+            </button>
+          </template>
+        </div>
       </div>
 
-      <!-- Ligne du bas -->
+      <!-- Bas : undo / MANQUÉ / fin -->
       <div class="warmup__bottom">
         <button class="warmup__bottom-undo" @click="undoLast">
           <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
             <path d="M9 14 4 9l5-5"/><path d="M4 9h10.5a5.5 5.5 0 0 1 0 11H11"/>
           </svg>
         </button>
-        <button class="warmup__bottom-miss" @click="tapMiss">MANQUÉ</button>
+        <button
+          class="warmup__bottom-miss"
+          :class="{ 'warmup__bottom-miss--pressed': pressedKey === 'miss' }"
+          @click="tapMiss"
+        >MANQUÉ</button>
         <button class="warmup__bottom-end" @click="endSession">
           <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
             <rect x="3" y="3" width="18" height="18" rx="2"/><line x1="9" y1="9" x2="15" y2="15"/><line x1="15" y1="9" x2="9" y2="15"/>
@@ -146,7 +254,7 @@ onUnmounted(() => cleanup())
       </div>
     </div>
 
-    <!-- Écran de récap -->
+    <!-- Récap -->
     <div v-else class="warmup__recap">
       <div class="warmup__recap-title">SESSION TERMINÉE</div>
 
@@ -160,12 +268,12 @@ onUnmounted(() => cleanup())
           <span class="warmup__recap-stat-val">{{ totalDarts }}</span>
           <span class="warmup__recap-stat-lbl">fléchettes</span>
         </div>
-        <div class="warmup__recap-sep" />
+        <div class="warmup__recap-sep"/>
         <div class="warmup__recap-stat">
           <span class="warmup__recap-stat-val">{{ hits }}</span>
           <span class="warmup__recap-stat-lbl">dans la zone</span>
         </div>
-        <div class="warmup__recap-sep" />
+        <div class="warmup__recap-sep"/>
         <div class="warmup__recap-stat">
           <span class="warmup__recap-stat-val">{{ totalDarts - hits }}</span>
           <span class="warmup__recap-stat-lbl">manqués</span>
@@ -176,17 +284,14 @@ onUnmounted(() => cleanup())
         <button
           class="warmup__recap-btn warmup__recap-btn--primary"
           @click="router.push({ name: 'warmup-game', query: { t: Date.now() } })"
-        >
-          Recommencer
-        </button>
+        >Recommencer</button>
         <button
           class="warmup__recap-btn warmup__recap-btn--secondary"
           @click="router.push({ name: 'lobby' })"
-        >
-          Accueil
-        </button>
+        >Accueil</button>
       </div>
     </div>
+
   </div>
 </template>
 
@@ -197,116 +302,202 @@ onUnmounted(() => cleanup())
   height: 100dvh;
   overflow: hidden;
 
-  // Timer dans le header
-  &__timer {
-    font-family: $font-display;
-    font-size: $title-xxs;
-    color: $text-color;
-    font-variant-numeric: tabular-nums;
-    padding-right: $padding-xxs;
-    transition: color 0.3s;
-
-    &--urgent { color: $error; }
+  // Header
+  &__header {
+    display: grid;
+    grid-template-columns: 44px 1fr 44px;
+    align-items: center;
+    padding: $padding-md $padding-md 0;
+    flex-shrink: 0;
   }
 
-  // --- Jeu ---
+  &__header-btn {
+    color: $text-color;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: $padding-xxs;
+    transition: opacity 0.15s;
+    &:active { opacity: 0.6; }
+  }
+
+  &__header-title {
+    font-family: $font-display;
+    font-size: $title-xxs;
+    font-weight: 400;
+    letter-spacing: 1px;
+    color: $text-color;
+    text-align: center;
+  }
+
+  // Jeu
   &__game {
     flex: 1;
     min-height: 0;
     display: flex;
     flex-direction: column;
-    padding: $padding-xxs $padding-sm $padding-xs;
-    gap: $padding-xxs;
+    padding: $padding-xs $padding-sm $padding-xs;
+    gap: $padding-xs;
   }
 
-  // Carte orange stats
+  // Carte bleue
   &__card {
-    background: $orange;
+    background: #1D4ED8;
     border-radius: $radius-lg;
     padding: $padding-sm $padding-md;
     display: flex;
     flex-direction: column;
+    gap: $padding-xs;
+    flex-shrink: 0;
+  }
+
+  &__card-big {
+    font-family: $font-display;
+    font-size: $title-xl;
+    color: $white;
+    line-height: 1;
+    font-variant-numeric: tabular-nums;
+    text-align: center;
+    padding: $padding-xs 0;
+  }
+
+  &__card-rows {
+    display: flex;
+    flex-direction: column;
     gap: $padding-xxs;
   }
 
-  &__card-zone {
-    font-family: $font-display;
-    font-size: $title-xxs;
-    color: rgba(255,255,255,0.7);
-    text-transform: uppercase;
-    letter-spacing: 2px;
+  &__card-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
   }
 
-  &__card-stats {
+  &__card-lbl {
+    font-size: $text-sm;
+    color: rgba(255, 255, 255, 0.75);
+  }
+
+  &__card-val {
+    font-size: $text-sm;
+    font-weight: 700;
+    color: $white;
+    font-variant-numeric: tabular-nums;
+  }
+
+  // Ligne TOUR + timer
+  &__tour-row {
     display: flex;
     align-items: center;
-    gap: $padding-md;
+    justify-content: space-between;
+    flex-shrink: 0;
   }
 
-  &__stat {
+  &__tour-label {
+    font-family: $font-display;
+    font-size: $title-xxs;
+    color: $text-color;
+    letter-spacing: 1px;
+  }
+
+  &__timer {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    font-size: $text-sm;
+    font-weight: 600;
+    color: $muted;
+    font-variant-numeric: tabular-nums;
+    transition: color 0.3s;
+
+    &--urgent { color: $error; }
+  }
+
+  // Pill slots
+  &__slots {
+    display: flex;
+    align-items: center;
+    background: $white;
+    border-radius: $radius-pill;
+    height: 44px;
+    overflow: hidden;
+    flex-shrink: 0;
+  }
+
+  &__slots-icon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0 $padding-sm;
+    flex-shrink: 0;
+  }
+
+  &__slots-sep {
+    width: 1px;
+    height: 26px;
+    background: rgba(0, 0, 0, 0.15);
+    flex-shrink: 0;
+  }
+
+  &__slot {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: $font-display;
+    font-size: $title-xxs;
+    color: $input-text;
+    font-variant-numeric: tabular-nums;
+    border-left: 1px solid rgba(0, 0, 0, 0.1);
+    height: 100%;
+  }
+
+  // Grille
+  &__grid-wrap {
+    flex: 1;
+    min-height: 0;
     display: flex;
     flex-direction: column;
-
-    &-value {
-      font-family: $font-display;
-      font-size: $title-lg;
-      color: $white;
-      line-height: 1;
-      font-variant-numeric: tabular-nums;
-    }
-
-    &-label {
-      font-size: $text-xs;
-      color: rgba(255,255,255,0.6);
-      text-transform: uppercase;
-      letter-spacing: 1px;
-    }
+    border-radius: $radius-sm;
+    overflow: hidden;
+    border: 1px solid rgba(255, 255, 255, 0.12);
   }
 
-  &__stat-divider {
-    width: 1px;
-    height: 40px;
-    background: rgba(255,255,255,0.25);
+  &__grid-header {
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    background: $surface;
+    flex-shrink: 0;
   }
 
-  // Onglets
-  &__tabs {
-    display: flex;
-    border-bottom: 1px solid $border;
-  }
-
-  &__tab {
-    flex: 1;
-    padding: $padding-xs $padding-xxs;
-    font-size: $text-xs;
+  &__gtab {
+    padding: $padding-xs;
+    text-align: center;
+    font-family: $font-display;
+    font-size: $title-xxs;
     font-weight: 700;
     color: $muted;
-    text-align: center;
-    border-bottom: 2px solid transparent;
-    transition: color 0.15s, border-color 0.15s;
-    line-height: 1.2;
+    border-right: 1px solid rgba(255, 255, 255, 0.1);
+    transition: background 0.12s, color 0.12s, filter 0.1s;
 
-    span { font-size: $text-xxs; }
+    &:last-child { border-right: none; }
 
     &--active {
-      color: $orange;
-      border-bottom-color: $orange;
+      color: $white;
+      background: rgba(255, 255, 255, 0.12);
     }
 
-    &--bull, &--outer {
-      color: $muted;
-      &:active { color: $text-color; }
-    }
+    &--sb { background: $dart-green; color: $white; }
+    &--b  { background: $dart-red;   color: $white; }
+
+    &--pressed { filter: brightness(1.35); }
   }
 
-  // Grille de nombres
   &__grid {
     flex: 1;
     display: grid;
     grid-template-columns: repeat(5, 1fr);
     grid-template-rows: repeat(4, 1fr);
-    border-left: 1px solid $border;
-    border-top: 1px solid $border;
   }
 
   &__cell {
@@ -314,32 +505,37 @@ onUnmounted(() => cleanup())
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    border-right: 1px solid $border;
-    border-bottom: 1px solid $border;
-    gap: 2px;
-    transition: background 0.1s;
+    gap: 1px;
+    border-right: 1px solid rgba(0, 0, 0, 0.2);
+    border-bottom: 1px solid rgba(0, 0, 0, 0.2);
+    transition: filter 0.1s, transform 0.1s;
 
-    &:active { background: rgba(255,255,255,0.08); }
+    &--pressed {
+      filter: brightness(1.45);
+      transform: scale(0.93);
+    }
 
     &-num {
       font-family: $font-display;
       font-size: $title-xs;
-      color: $text-color;
       line-height: 1;
+      font-variant-numeric: tabular-nums;
     }
 
     &-pts {
       font-size: $text-xxs;
-      color: $muted;
+      opacity: 0.6;
+      font-variant-numeric: tabular-nums;
     }
   }
 
-  // Ligne du bas
+  // Bas
   &__bottom {
     display: flex;
     align-items: center;
     gap: $padding-xs;
-    padding: $padding-xxs 0;
+    flex-shrink: 0;
+    padding-bottom: $padding-xxs;
   }
 
   &__bottom-undo {
@@ -359,8 +555,12 @@ onUnmounted(() => cleanup())
     border: 1px solid $border;
     border-radius: $radius-md;
     padding: $padding-xs;
-    transition: background 0.1s;
-    &:active { background: rgba($error, 0.2); color: $error-light; }
+    transition: background 0.1s, color 0.1s;
+
+    &:active, &--pressed {
+      background: rgba($error, 0.2);
+      color: $error-light;
+    }
   }
 
   &__bottom-end {
@@ -370,7 +570,7 @@ onUnmounted(() => cleanup())
     &:active { color: $error; }
   }
 
-  // --- Récap ---
+  // Récap
   &__recap {
     flex: 1;
     display: flex;
@@ -393,9 +593,7 @@ onUnmounted(() => cleanup())
     font-size: $title-xxl;
     line-height: 1;
     font-variant-numeric: tabular-nums;
-
     span { font-size: $title-lg; }
-
     &--good { color: $accent; }
     &--mid  { color: $orange; }
     &--low  { color: $error; }
@@ -461,11 +659,14 @@ onUnmounted(() => cleanup())
     font-weight: 700;
     padding: $padding-sm;
     transition: transform 0.1s, opacity 0.15s;
-
     &:active { transform: scale(0.97); opacity: 0.85; }
 
-    &--primary  { background: #1D4ED8; color: $white; }
+    &--primary   { background: #1D4ED8; color: $white; }
     &--secondary { background: $surface; border: 1px solid $border; color: $muted; }
   }
 }
+
+// Animation score dans slot
+.slot-pop-enter-active { transition: transform 0.15s ease, opacity 0.15s ease; }
+.slot-pop-enter-from   { transform: scale(0.5); opacity: 0; }
 </style>
