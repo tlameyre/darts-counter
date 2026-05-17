@@ -2,7 +2,11 @@ import { ref, computed } from 'vue'
 
 export function formatZoneLabel(zone) {
   if (!zone) return ''
-  if (zone.sector === null) return zone.type === 'B' ? 'Bull (50)' : 'Outer (25)'
+  if (zone.sector === null) {
+    if (zone.type === 'B')  return 'Bull (50)'
+    if (zone.type === 'SB') return 'Outer (25)'
+    return 'Bull (tout)'
+  }
   const types = { S: 'Simple', D: 'Double', T: 'Triple', A: 'Tout' }
   return `${types[zone.type]} ${zone.sector}`
 }
@@ -14,6 +18,7 @@ function zonesMatch(z1, z2) {
 function isHit(dart, zone) {
   if (!zone || dart.type === 'miss') return false
   if (zone.sector === null) {
+    if (zone.type === 'AB') return dart.type === 'bull'
     return dart.type === 'bull' && (zone.type === 'B' ? dart.pts === 50 : dart.pts === 25)
   }
   if (zone.type === 'A')

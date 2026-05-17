@@ -10,13 +10,14 @@ const SECTOR_ROWS = [
   [16, 17, 18, 19, 20],
 ]
 
-const TYPES_NUM  = [
+const TYPES_NUM = [
+  { id: 'A', label: 'Tout' },
   { id: 'S', label: 'Simple' },
   { id: 'D', label: 'Double' },
   { id: 'T', label: 'Triple' },
-  { id: 'A', label: 'Tout'   },
 ]
 const TYPES_BULL = [
+  { id: 'AB', label: 'Tout'       },
   { id: 'SB', label: 'Outer (25)' },
   { id: 'B',  label: 'Bull (50)'  },
 ]
@@ -32,8 +33,8 @@ const availableTypes = computed(() =>
 
 function selectSector(sector) {
   let type = props.modelValue.type
-  if (sector === null && !['B', 'SB'].includes(type)) type = 'B'
-  if (sector !== null && !['S', 'D', 'T', 'A'].includes(type)) type = 'D'
+  if (sector === null && !['AB', 'B', 'SB'].includes(type)) type = 'AB'
+  if (sector !== null && !['A', 'S', 'D', 'T'].includes(type)) type = 'D'
   emit('update:modelValue', { sector, type })
 }
 
@@ -53,30 +54,18 @@ function cellStyle(n) {
   <div class="zone-picker">
     <div class="zone-picker__grid">
       <template v-for="row in SECTOR_ROWS" :key="row[0]">
-        <button
-          v-for="n in row"
-          :key="n"
-          class="zone-picker__cell"
-          :style="cellStyle(n)"
-          @click="selectSector(n)"
-        >{{ n }}</button>
+        <button v-for="n in row" :key="n" class="zone-picker__cell" :style="cellStyle(n)" @click="selectSector(n)">{{ n
+          }}</button>
       </template>
     </div>
 
-    <button
-      class="zone-picker__bull"
-      :class="{ 'zone-picker__bull--active': modelValue.sector === null }"
-      @click="selectSector(null)"
-    >BULL</button>
+    <button class="zone-picker__bull" :class="{ 'zone-picker__bull--active': modelValue.sector === null }"
+      @click="selectSector(null)">BULL</button>
 
     <div class="zone-picker__types">
-      <button
-        v-for="t in availableTypes"
-        :key="t.id"
-        class="zone-picker__type"
-        :class="{ 'zone-picker__type--active': modelValue.type === t.id }"
-        @click="selectType(t.id)"
-      >{{ t.label }}</button>
+      <button v-for="t in availableTypes" :key="t.id" class="zone-picker__type"
+        :class="{ 'zone-picker__type--active': modelValue.type === t.id }" @click="selectType(t.id)">{{ t.label
+        }}</button>
     </div>
   </div>
 </template>
@@ -105,7 +94,10 @@ function cellStyle(n) {
     border-right: 1px solid rgba(0, 0, 0, 0.2);
     border-bottom: 1px solid rgba(0, 0, 0, 0.2);
     transition: filter 0.1s;
-    &:active { filter: brightness(1.3); }
+
+    &:active {
+      filter: brightness(1.3);
+    }
   }
 
   &__bull {
@@ -117,8 +109,14 @@ function cellStyle(n) {
     font-size: $title-xxs;
     border-radius: $radius-sm;
     transition: filter 0.1s;
-    &:active { filter: brightness(1.2); }
-    &--active { background: #1D4ED8; }
+
+    &:active {
+      filter: brightness(1.2);
+    }
+
+    &--active {
+      background: #1D4ED8;
+    }
   }
 
   &__types {
@@ -137,6 +135,7 @@ function cellStyle(n) {
     font-size: $text-xs;
     font-weight: 700;
     transition: all 0.15s;
+
     &--active {
       background: $orange;
       border-color: $orange;
