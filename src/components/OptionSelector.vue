@@ -45,7 +45,7 @@ defineEmits(['update:modelValue'])
     border-radius: $radius-md;
     color: $muted;
     font-family: $font-body;
-    font-size: $text-sm;
+    font-size: $text-xs;
     font-weight: 700;
     padding: $padding-sm;
     transition: all 0.15s;

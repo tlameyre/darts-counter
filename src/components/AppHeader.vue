@@ -15,6 +15,10 @@ defineEmits(['back'])
     </button>
 
     <h1 class="app-header__title">{{ title }}</h1>
+
+    <div class="app-header__right">
+      <slot name="right" />
+    </div>
   </header>
 </template>
 
@@ -39,7 +43,7 @@ defineEmits(['back'])
 
   &__title {
     font-family: $font-display;
-    font-size: $title-md;
+    font-size: $title-xxs;
     font-weight: 400;
     letter-spacing: 1px;
     color: $text-color;
@@ -47,6 +51,12 @@ defineEmits(['back'])
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
+  }
+
+  &__right {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
   }
 }
 </style>

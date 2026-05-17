@@ -59,7 +59,7 @@ onUnmounted(() => {
   <div class="game">
     <AppHeader
       title="ENTRAINEMENT"
-      @back="router.push({ name: 'settings', params: { modeId: route.params.modeId } })"
+      @back="router.push({ name: 'score-settings' })"
     />
 
     <main class="game__main">
@@ -68,7 +68,7 @@ onUnmounted(() => {
         :correct-count="correctCount"
         :max-questions="settings.maxQuestions ?? questionLabel"
         :best="best"
-        @replay="router.push({ name: 'game', params: { modeId: route.params.modeId }, query: { t: Date.now() } })"
+        @replay="router.push({ name: 'score-game', query: { t: Date.now() } })"
         @home="router.push({ name: 'lobby' })"
       />
 

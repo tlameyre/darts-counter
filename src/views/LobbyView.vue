@@ -5,7 +5,7 @@ import { GAME_MODES } from '../data/gameModes.js'
 const router = useRouter()
 
 function selectMode(mode) {
-  router.push({ name: 'settings', params: { modeId: mode.id } })
+  router.push({ name: mode.settingsRoute })
 }
 </script>
 

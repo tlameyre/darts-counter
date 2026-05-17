@@ -9,9 +9,7 @@ import { gameSettings } from '../store/gameStore.js'
 const route  = useRoute()
 const router = useRouter()
 
-const mode = computed(() =>
-  GAME_MODES.find(m => m.id === route.params.modeId)
-)
+const mode = computed(() => GAME_MODES.find(m => m.id === 'score-training'))
 
 const settings = reactive({
   difficulty:       'easy',
@@ -40,7 +38,7 @@ const timeOptions = [
 
 function startGame() {
   gameSettings.value = { ...settings }
-  router.push({ name: 'game', params: { modeId: mode.value.id } })
+  router.push({ name: 'score-game' })
 }
 </script>
 
