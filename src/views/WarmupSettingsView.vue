@@ -1,26 +1,26 @@
 <script setup>
 import { ref, reactive, computed } from 'vue'
-import { useRouter }    from 'vue-router'
-import AppHeader        from '../components/AppHeader.vue'
-import OptionSelector   from '../components/OptionSelector.vue'
-import ZonePicker       from '../components/ZonePicker.vue'
+import { useRouter } from 'vue-router'
+import AppHeader from '../components/AppHeader.vue'
+import OptionSelector from '../components/OptionSelector.vue'
+import ZonePicker from '../components/ZonePicker.vue'
 import { gameSettings } from '../store/gameStore.js'
 
 const router = useRouter()
 
 const settings = reactive({
-  duration: 5,
-  zone: { sector: 20, type: 'D' },
+  duration: null,
+  zone: { sector: 20, type: 'A' },
 })
 
 const customMinutes = ref(10)
 
 const durationOptions = [
-  { value: 2,        label: '2 min'    },
-  { value: 5,        label: '5 min'    },
-  { value: 10,       label: '10 min'   },
-  { value: null,     label: 'Illimité' },
-  { value: 'custom', label: 'Perso'    },
+  { value: null, label: 'Illimité' },
+  { value: 2, label: '2 min' },
+  { value: 5, label: '5 min' },
+  { value: 10, label: '10 min' },
+  { value: 'custom', label: 'Perso' },
 ]
 
 const isCustomDuration = computed(() => settings.duration === 'custom')
@@ -41,20 +41,10 @@ function startGame() {
     <main class="settings__main">
       <div class="settings__cards">
         <div class="settings__card">
-          <OptionSelector
-            label="Durée de la session"
-            :options="durationOptions"
-            v-model="settings.duration"
-          />
+          <OptionSelector label="Durée de la session" :options="durationOptions" v-model="settings.duration" />
           <div v-if="isCustomDuration" class="settings__custom-duration">
-            <input
-              type="number"
-              v-model="customMinutes"
-              min="1"
-              max="120"
-              class="settings__custom-input"
-              placeholder="Minutes"
-            />
+            <input type="number" v-model="customMinutes" min="1" max="120" class="settings__custom-input"
+              placeholder="Minutes" />
             <span class="settings__custom-label">minutes</span>
           </div>
         </div>
@@ -130,7 +120,11 @@ function startGame() {
     font-weight: 700;
     padding: $padding-xs $padding-sm;
     text-align: center;
-    &:focus { outline: none; border-color: $orange; }
+
+    &:focus {
+      outline: none;
+      border-color: $orange;
+    }
   }
 
   &__custom-label {
@@ -148,7 +142,11 @@ function startGame() {
     padding: $padding-md;
     width: 100%;
     transition: background 0.15s, transform 0.1s;
-    &:active { background: #1E40AF; transform: scale(0.98); }
+
+    &:active {
+      background: #1E40AF;
+      transform: scale(0.98);
+    }
   }
 }
 </style>
