@@ -2,7 +2,7 @@
   "name": "Darts Counter",
   "short_name": "Darts",
   "description": "Entrainement au comptage des fléchettes",
-  "start_url": "./index.html",
+  "start_url": "/darts-counter/",
   "display": "standalone",
   "background_color": "#0f172a",
   "theme_color": "#0f172a",
