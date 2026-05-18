@@ -3,6 +3,7 @@ import { reactive, computed } from 'vue'
 import { useRoute, useRouter }  from 'vue-router'
 import AppHeader      from '../components/AppHeader.vue'
 import OptionSelector from '../components/OptionSelector.vue'
+import ToggleSwitch   from '../components/ToggleSwitch.vue'
 import { GAME_MODES } from '../data/gameModes.js'
 import { gameSettings } from '../store/gameStore.js'
 
@@ -73,24 +74,11 @@ function startGame() {
           />
         </div>
 
-        <button
-          class="settings__toggle"
-          :class="{ 'settings__toggle--on': settings.doubleValidation }"
-          @click="settings.doubleValidation = !settings.doubleValidation"
-        >
-          <div class="settings__toggle-text">
-            <span class="settings__toggle-title">Double calcul</span>
-            <span class="settings__toggle-desc">
-              Après une bonne réponse, calcule aussi le score restant
-            </span>
-          </div>
-          <div
-            class="settings__toggle-switch"
-            :class="{ 'settings__toggle-switch--on': settings.doubleValidation }"
-          >
-            <div class="settings__toggle-knob" />
-          </div>
-        </button>
+        <ToggleSwitch
+          v-model="settings.doubleValidation"
+          title="Double calcul"
+          description="Après une bonne réponse, calcule aussi le score restant"
+        />
       </div>
 
       <button class="settings__start" @click="startGame">
@@ -131,63 +119,6 @@ function startGame() {
     border: 1px solid $border;
     border-radius: $radius-lg;
     padding: $padding-sm;
-  }
-
-  &__toggle {
-    background: $surface;
-    border: 1px solid $border;
-    border-radius: $radius-lg;
-    padding: $padding-sm $padding-md;
-    display: flex;
-    align-items: center;
-    gap: $padding-sm;
-    text-align: left;
-    transition: border-color 0.2s;
-
-    &--on { border-color: rgba($orange, 0.6); }
-  }
-
-  &__toggle-text { flex: 1; }
-
-  &__toggle-title {
-    display: block;
-    font-size: $text-sm;
-    font-weight: 700;
-    color: $text-color;
-    margin-bottom: $padding-xxs;
-  }
-
-  &__toggle-desc {
-    display: block;
-    font-size: $text-xs;
-    color: $muted;
-    line-height: 1.4;
-  }
-
-  &__toggle-switch {
-    width: 44px;
-    height: 26px;
-    background: $surface;
-    border: 1px solid $border;
-    border-radius: $radius-pill;
-    position: relative;
-    flex-shrink: 0;
-    transition: background 0.2s, border-color 0.2s;
-
-    &--on { background: $orange; border-color: $orange; }
-  }
-
-  &__toggle-knob {
-    position: absolute;
-    top: 3px;
-    left: 3px;
-    width: 18px;
-    height: 18px;
-    background: $white;
-    border-radius: 50%;
-    transition: transform 0.2s;
-
-    .settings__toggle-switch--on & { transform: translateX(18px); }
   }
 
   &__start {
