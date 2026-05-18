@@ -1,5 +1,6 @@
 <script setup>
 import { ref } from 'vue'
+import AppIcon from '../AppIcon.vue'
 
 const props = defineProps({
   locked: { type: Boolean, default: false },
@@ -22,21 +23,12 @@ function tapMiss() {
 <template>
   <div class="warmup__bottom">
     <button class="warmup__bottom-undo" @click="emit('undo')">
-      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-        stroke-linecap="round" stroke-linejoin="round">
-        <path d="M9 14 4 9l5-5" />
-        <path d="M4 9h10.5a5.5 5.5 0 0 1 0 11H11" />
-      </svg>
+      <AppIcon name="undo" :width="22" :height="22" />
     </button>
     <button class="warmup__bottom-miss" :class="{ 'warmup__bottom-miss--pressed': pressedMiss }"
       @click="tapMiss">MANQUÉ</button>
     <button class="warmup__bottom-end" @click="emit('end')">
-      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-        stroke-linecap="round" stroke-linejoin="round">
-        <rect x="3" y="3" width="18" height="18" rx="2" />
-        <line x1="9" y1="9" x2="15" y2="15" />
-        <line x1="15" y1="9" x2="9" y2="15" />
-      </svg>
+      <AppIcon name="stop" :width="20" :height="20" />
     </button>
   </div>
 </template>

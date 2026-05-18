@@ -1,4 +1,6 @@
 <script setup>
+import AppIcon from './AppIcon.vue'
+
 defineProps({
   title: { type: String, default: 'DARTS COUNTER' },
 })
@@ -9,9 +11,7 @@ defineEmits(['back'])
 <template>
   <header class="app-header">
     <button class="app-header__back" @click="$emit('back')">
-      <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
-        <path d="M19 12H5M5 12L12 19M5 12L12 5" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
-      </svg>
+      <AppIcon name="arrow-left" :width="20" :height="20" />
     </button>
 
     <h1 class="app-header__title">{{ title }}</h1>

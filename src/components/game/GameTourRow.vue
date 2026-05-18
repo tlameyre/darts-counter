@@ -1,4 +1,6 @@
 <script setup>
+import AppIcon from '../AppIcon.vue'
+
 defineProps({
   questionLabel: [String, Number],
   phase:         Number,
@@ -19,10 +21,7 @@ defineProps({
     </div>
     <div v-if="showTimer" class="game__timer-badge"
       :class="isUrgent && 'game__timer-badge--urgent'">
-      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-        <circle cx="12" cy="12" r="10" />
-        <polyline points="12 6 12 12 16 14" />
-      </svg>
+      <AppIcon name="clock" :width="13" :height="13" />
       {{ timeLeft }}S
     </div>
   </div>
