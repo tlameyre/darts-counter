@@ -120,7 +120,7 @@ function legsToWin(s) {
   </section>
 
   <p v-if="!summary && !sessions.length" class="tab__empty">
-    Lance une partie 501 pour voir tes stats ici.
+    Lance une partie x01 pour voir tes stats ici.
   </p>
 </template>
 

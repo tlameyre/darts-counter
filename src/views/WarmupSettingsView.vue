@@ -10,7 +10,7 @@ const router    = useRouter()
 const gameStore = useGameStore()
 
 const settings = reactive({
-  duration: 15,
+  duration: null,
   zones: [{ sector: 20, type: 'A' }],
 })
 

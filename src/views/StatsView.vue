@@ -32,9 +32,9 @@ onMounted(async () => {
 })
 
 const MODES = [
-  { id: 'score',  label: 'Score',  color: '#D64A24' },
-  { id: 'warmup', label: 'Warmup', color: '#1D4ED8' },
-  { id: 'x01',    label: '501',    color: '#047857' },
+  { id: 'score',  label: 'Quiz',  color: '#D64A24' },
+  { id: 'warmup', label: 'Echauffement', color: '#1D4ED8' },
+  { id: 'x01',    label: 'x01',    color: '#047857' },
 ]
 const selectedMode = ref('score')
 

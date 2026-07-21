@@ -5,7 +5,7 @@
 export const GAME_MODES = [
   {
     id: "score-training",
-    title: "ENTRAINEMENT\nSCORE",
+    title: "ENTRAINEMENT\nCALCUL",
     description:
       "Calcule le total de ta volée et entraîne-toi à compter rapidement.",
     color: "#EB6343",
