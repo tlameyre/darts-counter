@@ -191,7 +191,7 @@ const totalDurationMs = computed(() =>
     flex-direction: column;
     align-items: center;
     padding: 0 $padding-xs;
-    height: stretch;
+    height: 100%;
     justify-content: center;
 
     &:first-child { padding-left: 0; }
