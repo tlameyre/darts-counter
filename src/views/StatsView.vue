@@ -1,5 +1,6 @@
 <script setup>
 import { ref, onMounted } from 'vue'
+import { useRouter } from 'vue-router'
 import { useDbStore } from '../store/dbStore.js'
 import { useBadgeStore } from '../store/badgeStore.js'
 import AppTabs from '../components/AppTabs.vue'
@@ -8,6 +9,7 @@ import StatsWarmupTab from '../components/stats/StatsWarmupTab.vue'
 import StatsX01Tab from '../components/stats/StatsX01Tab.vue'
 import StatsSessionDetail from '../components/stats/StatsSessionDetail.vue'
 
+const router     = useRouter()
 const dbStore    = useDbStore()
 const badgeStore = useBadgeStore()
 
@@ -89,6 +91,7 @@ async function deleteSession(id) {
           :summary="globalStats?.warmupStats ?? null"
           :sessions="warmupSessions"
           @open-detail="openDetail"
+          @open-chart="router.push({ name: 'stats-warmup-detail' })"
         />
         <StatsX01Tab
           v-else-if="selectedMode === 'x01'"

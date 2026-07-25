@@ -17,11 +17,25 @@ import ChangePasswordModal from '../components/profile/ChangePasswordModal.vue'
 import X01DoublesModal from '../components/x01/X01DoublesModal.vue'
 import X01CheckoutModal from '../components/x01/X01CheckoutModal.vue'
 import FriendsView from './FriendsView.vue'
+import StatsWarmupDetailView from './StatsWarmupDetailView.vue'
 
 const router = useRouter()
 
 // --- Preview FriendsView ---
 const showFriendsPreview = ref(false)
+
+// --- Preview StatsWarmupDetailView ---
+const showWarmupDetailPreview = ref(false)
+const D16 = { sector: 16, type: 'D' }
+const T20 = { sector: 20, type: 'T' }
+const mockWarmupSessions = [
+  { id: '1', played_at: '2025-11-02T10:00:00Z', accuracy: 55, total_darts: 20, hits: 11, duration_s: 300, settings: { zoneRecap: [{ zones: [D16], total: 20, hits: 9, accuracy: 45, durationMs: 300000 }] } },
+  { id: '2', played_at: '2026-01-05T10:00:00Z', accuracy: 62, total_darts: 40, hits: 25, duration_s: 480, settings: { zoneRecap: [{ zones: [D16], total: 20, hits: 12, accuracy: 60, durationMs: 240000 }, { zones: [T20], total: 20, hits: 13, accuracy: 65, durationMs: 240000 }] } },
+  { id: '3', played_at: '2026-02-12T10:00:00Z', accuracy: 68, total_darts: 30, hits: 21, duration_s: 360, settings: { zoneRecap: [{ zones: [T20], total: 30, hits: 21, accuracy: 70, durationMs: 360000 }] } },
+  { id: '4', played_at: '2026-03-20T10:00:00Z', accuracy: 71, total_darts: 30, hits: 21, duration_s: 360, settings: { zoneRecap: [{ zones: [D16], total: 30, hits: 21, accuracy: 70, durationMs: 360000 }] } },
+  { id: '5', played_at: '2026-07-01T09:00:00Z', accuracy: 80, total_darts: 40, hits: 33, duration_s: 420, settings: { zoneRecap: [{ zones: [D16, T20], total: 40, hits: 33, accuracy: 82, durationMs: 420000 }] } },
+  { id: '6', played_at: '2026-07-01T18:30:00Z', accuracy: 58, total_darts: 25, hits: 15, duration_s: 300, settings: { zoneRecap: [{ zones: [T20], total: 25, hits: 15, accuracy: 60, durationMs: 300000 }] } },
+]
 
 // --- Overlays / modals ---
 const unlockBadges        = ref([])
@@ -62,6 +76,7 @@ const views = [
   { name: 'home',           label: 'Home' },
   { name: 'play',           label: 'Lobby (Jouer)' },
   { name: 'stats',          label: 'Stats' },
+  { name: 'stats-warmup-detail', label: 'Stats — Détail échauffement' },
   { name: 'profile',        label: 'Profil' },
   { name: 'profile-edit',   label: 'Édition profil' },
   { name: 'badges',         label: 'Badges' },
@@ -131,6 +146,14 @@ const mockSent = [
       </div>
     </section>
 
+    <!-- StatsWarmupDetailView — aperçu plein écran avec données fictives -->
+    <section class="dev__section">
+      <h2 class="dev__section-title">Stats — Détail échauffement (preview)</h2>
+      <div class="dev__buttons">
+        <button class="dev__btn" @click="showWarmupDetailPreview = true">Ouvrir la vue Détail échauffement</button>
+      </div>
+    </section>
+
     <!-- Game Over en aperçu (a besoin d'un conteneur) -->
     <div v-if="showGameOver" class="dev__gameover-preview">
       <GameOver :correct-count="14" :max-questions="20" :best="9"
@@ -160,6 +183,12 @@ const mockSent = [
         :mock-friend-code="'DMC-X7K2'"
       />
       <button class="dev__close-preview" @click="showFriendsPreview = false">✕ Fermer</button>
+    </div>
+
+    <!-- StatsWarmupDetailView plein écran -->
+    <div v-if="showWarmupDetailPreview" class="dev__fullscreen-preview">
+      <StatsWarmupDetailView :mock-sessions="mockWarmupSessions" />
+      <button class="dev__close-preview" @click="showWarmupDetailPreview = false">✕ Fermer</button>
     </div>
   </div>
 </template>

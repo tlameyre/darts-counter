@@ -1,5 +1,6 @@
 <script setup>
 import StatCell from '../StatCell.vue'
+import AppIcon from '../AppIcon.vue'
 import { formatZoneLabel, formatZonesLabel } from '../../composables/useWarmup.js'
 
 const props = defineProps({
@@ -7,7 +8,7 @@ const props = defineProps({
   sessions: { type: Array,  default: () => [] },
 })
 
-const emit = defineEmits(['open-detail'])
+const emit = defineEmits(['open-detail', 'open-chart'])
 
 function formatDate(iso) {
   return new Date(iso).toLocaleDateString('fr-FR', { day: '2-digit', month: 'short' })
@@ -29,7 +30,13 @@ function zoneNames(s) {
 
 <template>
   <section v-if="summary" class="tab__card tab__card--shrink">
-    <h2 class="tab__section-title">Résumé</h2>
+    <div class="tab__section-header">
+      <h2 class="tab__section-title">Résumé</h2>
+      <button class="tab__detail-btn" @click="emit('open-chart')">
+        Voir le détail
+        <AppIcon name="arrow-right" :width="16" :height="16" />
+      </button>
+    </div>
     <div class="tab__grid">
       <StatCell :value="summary.sessions" label="Sessions" />
       <StatCell :value="summary.totalDarts" label="Fléchettes jetées" />
@@ -79,12 +86,31 @@ function zoneNames(s) {
     }
   }
 
+  &__section-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: $gap-sm;
+  }
+
   &__section-title {
     @include title-sm;
     color: $muted;
     text-transform: uppercase;
     letter-spacing: 0.05em;
     flex-shrink: 0;
+  }
+
+  &__detail-btn {
+    @include text-xs;
+    color: $muted;
+    display: flex;
+    align-items: center;
+    gap: $gap-xxs;
+    flex-shrink: 0;
+    transition: opacity 0.15s;
+
+    &:active { opacity: 0.6; }
   }
 
   &__grid {
@@ -166,6 +192,7 @@ function zoneNames(s) {
   .tab {
     &__card        { padding: $padding-xl; gap: $gap-lg; }
     &__section-title { @include title-md; }
+    &__detail-btn  { @include text-sm; }
     &__empty       { @include text-md; }
     &__session-card  { padding: $padding-md $padding-lg; gap: $gap-sm; }
     &__session-title { @include title-md; }

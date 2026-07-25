@@ -16,36 +16,36 @@ const RED_NUMBERS = new Set([20, 18, 13, 10, 2, 3, 7, 8, 14, 12])
 
 function cardStyle(zones) {
   if (zones.length > 1) {
-    return { '--card-bg': 'rgba(255,255,255,0.07)', '--card-text': '#ffffff', '--card-muted': 'rgba(255,255,255,0.55)', '--card-sep': 'rgba(255,255,255,0.12)' }
+    return { '--card-bg': 'rgba(255,255,255,0.07)', '--card-text': '#ffffff', '--card-muted': 'rgba(255,255,255,0.55)', '--card-sep': 'var(--text-color)' }
   }
   const zone = zones[0]
 
   if (zone.type === 'AB') {
-    return { '--card-bg': '#000000', '--card-text': '#ffffff', '--card-muted': 'rgba(255,255,255,0.55)', '--card-sep': 'rgba(255,255,255,0.12)' }
+    return { '--card-bg': '#000000', '--card-text': '#ffffff', '--card-muted': 'rgba(255,255,255,0.55)', '--card-sep': 'var(--text-color)' }
   }
 
   if (zone.type === 'A') {
     return RED_NUMBERS.has(zone.sector)
-      ? { '--card-bg': 'var(--dart-black)', '--card-text': '#ffffff', '--card-muted': 'rgba(255,255,255,0.55)', '--card-sep': 'rgba(255,255,255,0.12)' }
-      : { '--card-bg': 'var(--dart-cream)', '--card-text': 'var(--dart-cream-text)', '--card-muted': 'rgba(0,0,0,0.4)', '--card-sep': 'rgba(0,0,0,0.12)' }
+      ? { '--card-bg': 'var(--dart-black)', '--card-text': '#ffffff', '--card-muted': 'rgba(255,255,255,0.55)', '--card-sep': 'var(--text-color)' }
+      : { '--card-bg': 'var(--dart-cream)', '--card-text': 'var(--dart-cream-text)', '--card-muted': 'rgba(0,0,0,0.4)', '--card-sep': 'rgba(0,0,0,0.5)' }
   }
 
   if (zone.sector === null) {
     const bg = zone.type === 'B' ? 'var(--dart-red)' : 'var(--dart-green)'
-    return { '--card-bg': bg, '--card-text': '#ffffff', '--card-muted': 'rgba(255,255,255,0.7)', '--card-sep': 'rgba(255,255,255,0.25)' }
+    return { '--card-bg': bg, '--card-text': '#ffffff', '--card-muted': 'rgba(255,255,255,0.7)', '--card-sep': 'var(--text-color)' }
   }
 
   const isRed = RED_NUMBERS.has(zone.sector)
 
   if (zone.type === 'S') {
     return isRed
-      ? { '--card-bg': 'var(--dart-black)', '--card-text': '#ffffff', '--card-muted': 'rgba(255,255,255,0.55)', '--card-sep': 'rgba(255,255,255,0.12)' }
-      : { '--card-bg': 'var(--dart-cream)', '--card-text': 'var(--dart-cream-text)', '--card-muted': 'rgba(0,0,0,0.4)', '--card-sep': 'rgba(0,0,0,0.12)' }
+      ? { '--card-bg': 'var(--dart-black)', '--card-text': '#ffffff', '--card-muted': 'rgba(255,255,255,0.55)', '--card-sep': 'var(--text-color)' }
+      : { '--card-bg': 'var(--dart-cream)', '--card-text': 'var(--dart-cream-text)', '--card-muted': 'rgba(0,0,0,0.4)', '--card-sep': 'rgba(0,0,0,0.5)' }
   }
 
   return isRed
-    ? { '--card-bg': 'var(--dart-red)',   '--card-text': '#ffffff', '--card-muted': 'rgba(255,255,255,0.7)', '--card-sep': 'rgba(255,255,255,0.25)' }
-    : { '--card-bg': 'var(--dart-green)', '--card-text': '#ffffff', '--card-muted': 'rgba(255,255,255,0.7)', '--card-sep': 'rgba(255,255,255,0.25)' }
+    ? { '--card-bg': 'var(--dart-red)',   '--card-text': '#ffffff', '--card-muted': 'rgba(255,255,255,0.7)', '--card-sep': 'var(--text-color)' }
+    : { '--card-bg': 'var(--dart-green)', '--card-text': '#ffffff', '--card-muted': 'rgba(255,255,255,0.7)', '--card-sep': 'var(--text-color)' }
 }
 
 function fmtDuration(ms) {
@@ -83,12 +83,10 @@ const totalDurationMs = computed(() =>
             <span class="recap__zone-stat-val">{{ fmtDuration(zs.durationMs) }}</span>
             <span class="recap__zone-stat-lbl">Temps</span>
           </div>
-          <div class="recap__zone-sep" />
           <div class="recap__zone-stat">
             <span class="recap__zone-stat-val">{{ zs.total }}</span>
             <span class="recap__zone-stat-lbl">Jetées</span>
           </div>
-          <div class="recap__zone-sep" />
           <div class="recap__zone-stat">
             <span class="recap__zone-stat-val">{{ zs.hits }}</span>
             <span class="recap__zone-stat-lbl">Touchées</span>
@@ -191,12 +189,19 @@ const totalDurationMs = computed(() =>
     display: flex;
     flex-direction: column;
     align-items: center;
-    padding: 0 $padding-md;
+    padding: 0 $padding-xs;
+    height: stretch;
+    justify-content: center;
+
+    &:first-child { padding-left: 0; }
+    &:last-child  { padding-right: 0; }
+
 
     &-val {
       @include title-lg;
       color: var(--card-text);
       font-variant-numeric: tabular-nums;
+      text-align: center
     }
 
     &-lbl {
@@ -205,7 +210,7 @@ const totalDurationMs = computed(() =>
     }
 
     &:not(:last-child) {
-      border-right: 1px solid var(--card-sep);
+      border-right: $border-md solid var(--card-sep);
     }
   }
 
@@ -247,6 +252,7 @@ const totalDurationMs = computed(() =>
     @include title-xl;
     color: $white;
     font-variant-numeric: tabular-nums;
+    text-align: center
   }
 
   &__total-lbl {

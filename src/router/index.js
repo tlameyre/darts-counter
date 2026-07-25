@@ -4,6 +4,7 @@ import { useAuthStore } from "../store/authStore.js";
 import HomeView from "../views/HomeView.vue";
 import LobbyView from "../views/LobbyView.vue";
 import StatsView from "../views/StatsView.vue";
+import StatsWarmupDetailView from "../views/StatsWarmupDetailView.vue";
 import SettingsView from "../views/SettingsView.vue";
 import GameView from "../views/GameView.vue";
 import WarmupSettingsView from "../views/WarmupSettingsView.vue";
@@ -36,6 +37,7 @@ const routes = [
   { path: "/", name: "home", component: HomeView },
   { path: "/play", name: "play", component: LobbyView },
   { path: "/stats", name: "stats", component: StatsView },
+  { path: "/stats/warmup", name: "stats-warmup-detail", component: StatsWarmupDetailView },
   { path: "/friends", name: "friends", component: FriendsView },
 
   // App — autres

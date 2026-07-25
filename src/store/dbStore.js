@@ -127,6 +127,21 @@ export const useDbStore = defineStore('db', () => {
     return data
   }
 
+  async function fetchWarmupSessionsForChart() {
+    const user = getUser()
+    if (!user) return []
+    const { data, error } = await supabase
+      .from('warmup_sessions')
+      .select('*')
+      .eq('user_id', user.id)
+      .order('played_at', { ascending: true })
+    if (error) {
+      console.error('[dbStore] fetchWarmupSessionsForChart:', error.message)
+      return []
+    }
+    return data
+  }
+
   async function fetchProfileStats() {
     const user = getUser()
     if (!user) return null
@@ -244,7 +259,7 @@ export const useDbStore = defineStore('db', () => {
   return {
     saveGameSession, saveWarmupSession, saveX01Session,
     deleteGameSession, deleteWarmupSession, deleteX01Session,
-    fetchGameSessions, fetchWarmupSessions, fetchX01Sessions,
+    fetchGameSessions, fetchWarmupSessions, fetchWarmupSessionsForChart, fetchX01Sessions,
     fetchProfileStats, fetchGlobalStats,
   }
 })
