@@ -160,6 +160,7 @@ const totalDurationMs = computed(() =>
     flex-direction: column;
     gap: $gap-xs;
     border: $border-md solid $white;
+    height: min-content;
   }
 
   &__zone-header {
