@@ -2,6 +2,7 @@
 import { ref } from 'vue'
 import DartSlotsBar from './DartSlotsBar.vue'
 import SectorGrid from './SectorGrid.vue'
+import SvgDartboard from '../x01/SvgDartboard.vue'
 import NumPad from '../NumPad.vue'
 import GameBottomBar from './GameBottomBar.vue'
 
@@ -18,9 +19,9 @@ const emit = defineEmits(['dart', 'miss', 'bust', 'validate', 'undo'])
 const mode = ref('dart')
 const volleyStr = ref('')
 
-function toggleMode() {
+function selectMode(newMode) {
   if (props.locked || props.bust) return
-  mode.value = mode.value === 'dart' ? 'volley' : 'dart'
+  mode.value = newMode
   volleyStr.value = ''
 }
 
@@ -59,11 +60,13 @@ function handleUndo() {
       :value="volleyStr"
       :bust="bust"
       :toggleable="toggleable"
-      @toggle="toggleMode"
+      @select="selectMode"
       @validate="submitVolley"
     />
 
     <SectorGrid v-if="mode === 'dart'" :locked="locked || bust" @dart="$emit('dart', $event)" />
+
+    <SvgDartboard v-else-if="mode === 'board'" class="game-input__dartboard" :locked="locked || bust" @dart="$emit('dart', $event)" />
 
     <NumPad v-else class="game-input__numpad" @digit="appendDigit" @delete="deleteDigit" @validate="submitVolley" />
 
@@ -92,6 +95,14 @@ function handleUndo() {
   &__numpad {
     min-height: 0;
     border-top: $border-md solid $white;
+  }
+
+  &__dartboard {
+    flex: 1;
+    min-height: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
   }
 }
 </style>

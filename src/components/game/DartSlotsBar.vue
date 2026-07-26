@@ -1,8 +1,9 @@
 <script setup>
+import { ref, computed } from 'vue'
 import AppIcon from '../AppIcon.vue'
 
-defineProps({
-  mode:       { type: String,  default: 'dart' },   // 'dart' | 'volley'
+const props = defineProps({
+  mode:       { type: String,  default: 'dart' },   // 'dart' | 'board' | 'volley'
   darts:      { type: Array,   default: () => [] },
   valueKey:   { type: String,  default: 'value' },
   value:      { type: String,  default: '' },        // saisie en cours (mode volée)
@@ -10,44 +11,89 @@ defineProps({
   toggleable: { type: Boolean, default: false },
 })
 
-defineEmits(['toggle', 'validate'])
+const emit = defineEmits(['select', 'validate'])
+
+const MODE_OPTIONS = [
+  { id: 'dart',   icon: 'numpad',   label: 'Grille' },
+  { id: 'board',  icon: 'dartboard', label: 'Cible' },
+  { id: 'volley', icon: 'dialpad',  label: 'Volée' },
+]
+
+const currentIcon = computed(() => MODE_OPTIONS.find(o => o.id === props.mode)?.icon ?? 'numpad')
+
+const isOpen = ref(false)
+
+function toggleOpen() {
+  if (props.bust) return
+  isOpen.value = !isOpen.value
+}
+
+function selectMode(id) {
+  isOpen.value = false
+  emit('select', id)
+}
 </script>
 
 <template>
-  <div class="dart-bar" :class="{ 'dart-bar--bust': bust }">
+  <div class="dart-bar-wrap">
+    <div class="dart-bar" :class="{ 'dart-bar--bust': bust }">
 
-    <button v-if="toggleable" class="dart-bar__icon" :disabled="bust" @click="$emit('toggle')">
-      <AppIcon :name="mode === 'dart' ? 'dartboard' : 'keyboard'" :width="30" :height="30" />
-    </button>
-    <div v-else class="dart-bar__icon">
-      <AppIcon name="dartboard" :width="30" :height="30" />
+      <div v-if="toggleable" class="dart-bar__icon-wrap">
+        <button class="dart-bar__icon" :disabled="bust" @click="toggleOpen">
+          <AppIcon :name="currentIcon" :width="34" :height="34" />
+        </button>
+      </div>
+      <div v-else class="dart-bar__icon-wrap">
+        <div class="dart-bar__icon">
+          <AppIcon name="dartboard" :width="34" :height="34" />
+        </div>
+      </div>
+
+      <template v-if="bust">
+        <div class="dart-bar__bust-label">BUST !</div>
+      </template>
+
+      <template v-else-if="mode === 'dart' || mode === 'board'">
+        <div v-for="i in 3" :key="i" class="dart-bar__slot">
+          <Transition name="slot-pop">
+            <span v-if="darts[i - 1]" :key="String(darts[i - 1][valueKey]) + i" class="dart-bar__value">
+              {{ darts[i - 1][valueKey] }}
+            </span>
+          </Transition>
+        </div>
+      </template>
+
+      <template v-else>
+        <div class="dart-bar__volley-value" :class="{ 'dart-bar__volley-value--placeholder': !value }">
+          {{ value || 'Score de la volée' }}
+        </div>
+        <button class="dart-bar__ok" @click="$emit('validate')">OK</button>
+      </template>
+
     </div>
 
-    <template v-if="bust">
-      <div class="dart-bar__bust-label">BUST !</div>
-    </template>
-
-    <template v-else-if="mode === 'dart'">
-      <div v-for="i in 3" :key="i" class="dart-bar__slot">
-        <Transition name="slot-pop">
-          <span v-if="darts[i - 1]" :key="String(darts[i - 1][valueKey]) + i" class="dart-bar__value">
-            {{ darts[i - 1][valueKey] }}
-          </span>
-        </Transition>
-      </div>
-    </template>
-
-    <template v-else>
-      <div class="dart-bar__volley-value" :class="{ 'dart-bar__volley-value--placeholder': !value }">
-        {{ value || 'Score de la volée' }}
-      </div>
-      <button class="dart-bar__ok" @click="$emit('validate')">OK</button>
-    </template>
-
+    <div v-if="isOpen" class="dart-bar__popover-backdrop" @click="isOpen = false" />
+    <div v-if="isOpen" class="dart-bar__popover">
+      <button
+        v-for="option in MODE_OPTIONS"
+        :key="option.id"
+        class="dart-bar__popover-option"
+        :class="{ 'dart-bar__popover-option--active': option.id === mode }"
+        @click="selectMode(option.id)"
+      >
+        <AppIcon :name="option.icon" :width="22" :height="22" />
+        <span>{{ option.label }}</span>
+      </button>
+    </div>
   </div>
 </template>
 
 <style lang="scss" scoped>
+.dart-bar-wrap {
+  position: relative;
+  flex-shrink: 0;
+}
+
 .dart-bar {
   display: flex;
   align-items: stretch;
@@ -55,11 +101,18 @@ defineEmits(['toggle', 'validate'])
   border-radius: $radius-pill;
   overflow: hidden;
   padding: $padding-sm;
+  padding-left: $padding-lg;
   flex-shrink: 0;
   transition: background 0.2s;
 
   &--bust {
     background: $error;
+  }
+
+  &__icon-wrap {
+    display: flex;
+    align-items: center;
+    flex-shrink: 0;
   }
 
   &__icon {
@@ -74,6 +127,48 @@ defineEmits(['toggle', 'validate'])
     &:is(button) {
       &:active   { opacity: 0.5; }
       &:disabled { opacity: 0.4; }
+    }
+  }
+
+  &__popover-backdrop {
+    position: fixed;
+    inset: 0;
+    z-index: 40;
+  }
+
+  &__popover {
+    position: absolute;
+    top: calc(100% + #{$gap-xs});
+    left: $padding-sm;
+    z-index: 41;
+    display: flex;
+    flex-direction: column;
+    gap: $gap-xxs;
+    background: $white;
+    border-radius: $radius-md;
+    padding: $padding-xs;
+    min-width: 160px;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.35);
+  }
+
+  &__popover-option {
+    display: flex;
+    align-items: center;
+    gap: $gap-sm;
+    padding: $padding-xs $padding-sm;
+    border-radius: $radius-sm;
+    color: $black;
+    @include text-sm;
+    white-space: nowrap;
+    transition: background 0.15s;
+
+    &:active {
+      background: rgba($black, 0.08);
+    }
+
+    &--active {
+      background: $accent;
+      color: $white;
     }
   }
 

@@ -16,6 +16,8 @@ import ChangeEmailModal from '../components/profile/ChangeEmailModal.vue'
 import ChangePasswordModal from '../components/profile/ChangePasswordModal.vue'
 import X01DoublesModal from '../components/x01/X01DoublesModal.vue'
 import X01CheckoutModal from '../components/x01/X01CheckoutModal.vue'
+import SvgDartboard from '../components/x01/SvgDartboard.vue'
+import GameInput from '../components/game/GameInput.vue'
 import FriendsView from './FriendsView.vue'
 import StatsWarmupDetailView from './StatsWarmupDetailView.vue'
 
@@ -23,6 +25,18 @@ const router = useRouter()
 
 // --- Preview FriendsView ---
 const showFriendsPreview = ref(false)
+
+// --- Preview SvgDartboard ---
+const showDartboardPreview = ref(false)
+const lastDart = ref(null)
+
+// --- Preview GameInput (avec popover de sélection de mode) ---
+const showGameInputPreview = ref(false)
+const mockDarts = ref([])
+function onMockDart(d) {
+  if (mockDarts.value.length >= 3) mockDarts.value = []
+  mockDarts.value = [...mockDarts.value, d]
+}
 
 // --- Preview StatsWarmupDetailView ---
 const showWarmupDetailPreview = ref(false)
@@ -146,6 +160,22 @@ const mockSent = [
       </div>
     </section>
 
+    <!-- SvgDartboard — aperçu plein écran -->
+    <section class="dev__section">
+      <h2 class="dev__section-title">Cible SVG (preview)</h2>
+      <div class="dev__buttons">
+        <button class="dev__btn" @click="showDartboardPreview = true">Ouvrir la cible</button>
+      </div>
+    </section>
+
+    <!-- GameInput — aperçu plein écran (popover de sélection de mode) -->
+    <section class="dev__section">
+      <h2 class="dev__section-title">Saisie de partie — GameInput (preview)</h2>
+      <div class="dev__buttons">
+        <button class="dev__btn" @click="showGameInputPreview = true">Ouvrir la saisie</button>
+      </div>
+    </section>
+
     <!-- StatsWarmupDetailView — aperçu plein écran avec données fictives -->
     <section class="dev__section">
       <h2 class="dev__section-title">Stats — Détail échauffement (preview)</h2>
@@ -183,6 +213,25 @@ const mockSent = [
         :mock-friend-code="'DMC-X7K2'"
       />
       <button class="dev__close-preview" @click="showFriendsPreview = false">✕ Fermer</button>
+    </div>
+
+    <!-- SvgDartboard plein écran -->
+    <div v-if="showDartboardPreview" class="dev__fullscreen-preview dev__dartboard-preview">
+      <SvgDartboard @dart="lastDart = $event" />
+      <pre class="dev__dartboard-log">{{ lastDart ? JSON.stringify(lastDart) : 'Tape une zone…' }}</pre>
+      <button class="dev__close-preview" @click="showDartboardPreview = false">✕ Fermer</button>
+    </div>
+
+    <!-- GameInput plein écran -->
+    <div v-if="showGameInputPreview" class="dev__fullscreen-preview dev__gameinput-preview">
+      <GameInput
+        :darts="mockDarts"
+        toggleable
+        @dart="onMockDart"
+        @miss="onMockDart({ type: 'miss', sector: null, pts: 0, label: 'Miss' })"
+        @undo="mockDarts = mockDarts.slice(0, -1)"
+      />
+      <button class="dev__close-preview" @click="showGameInputPreview = false">✕ Fermer</button>
     </div>
 
     <!-- StatsWarmupDetailView plein écran -->
@@ -257,6 +306,28 @@ const mockSent = [
     background: $bg;
     overflow-y: auto;
     z-index: 90;
+  }
+
+  &__gameinput-preview {
+    display: flex;
+    flex-direction: column;
+    padding: $padding-lg $padding-md calc($padding-xxl + 64px);
+    gap: $gap-md;
+  }
+
+  &__dartboard-preview {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    gap: $gap-lg;
+    padding: $padding-lg;
+  }
+
+  &__dartboard-log {
+    @include text-sm;
+    color: $muted;
+    font-family: monospace;
   }
 
   &__close-preview {
