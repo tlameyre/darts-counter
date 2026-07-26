@@ -186,6 +186,17 @@
           fill="currentColor" />
       </symbol>
 
+      <symbol id="icon-drag-handle" viewBox="0 0 24 24" fill="none">
+        <g fill="currentColor">
+          <circle cx="9" cy="6" r="1.8" />
+          <circle cx="9" cy="12" r="1.8" />
+          <circle cx="9" cy="18" r="1.8" />
+          <circle cx="15" cy="6" r="1.8" />
+          <circle cx="15" cy="12" r="1.8" />
+          <circle cx="15" cy="18" r="1.8" />
+        </g>
+      </symbol>
+
     </defs>
   </svg>
 </template>

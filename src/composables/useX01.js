@@ -281,7 +281,10 @@ export function useX01({ startScore, legsToWin, players = null }) {
     volleyCompleting.value     = false
     pendingDoublesPrompt.value = false
     pendingCheckout.value      = null
-    currentPlayerIndex.value   = 0
+    // 2 joueurs : alterne le joueur qui démarre, en partant de celui placé en premier.
+    // 3+ joueurs : même ordre à chaque manche (toujours le joueur placé en premier).
+    const legsPlayed           = allLegsOrdered[0].value.length
+    currentPlayerIndex.value   = playerCount === 2 ? legsPlayed % 2 : 0
     phase.value                = 'playing'
   }
 

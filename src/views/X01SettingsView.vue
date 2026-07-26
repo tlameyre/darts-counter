@@ -1,6 +1,7 @@
 <script setup>
-import { ref, reactive, computed } from 'vue'
+import { ref, reactive, computed, watch } from 'vue'
 import { useRouter } from 'vue-router'
+import draggable from 'vuedraggable'
 import AppHeader from '../components/AppHeader.vue'
 import AppButton from '../components/AppButton.vue'
 import AppIcon from '../components/AppIcon.vue'
@@ -23,39 +24,41 @@ const settings = reactive({
   scoreKey:  501,
   legsToWin: 2,
 })
-const customScore    = ref(401)
-const aiProfile      = ref(null)
-const showPicker     = ref(false)
-const extraPlayers   = ref([]) // friends + guests added by user
+const customScore = ref(401)
+const aiProfile   = ref(null)
+const showPicker  = ref(false)
+
+// Ordre libre : "moi" (déplaçable comme les autres) + amis/invités ajoutés
+const players = ref([
+  { id: 'me', name: authStore.profile?.username ?? 'Toi', isMe: true },
+])
+
+// Le profil peut se charger après le montage de la vue
+watch(() => authStore.profile, (profile) => {
+  const me = players.value.find(p => p.isMe)
+  if (me && profile?.username) me.name = profile.username
+})
 
 const isCustomScore  = computed(() => settings.scoreKey === 'custom')
 const effectiveScore = computed(() =>
   isCustomScore.value ? Math.max(1, Number(customScore.value) || 501) : settings.scoreKey
 )
 
-// Player 0 is always the logged-in user
-const mePlayer = computed(() => ({
-  id:   'me',
-  name: authStore.profile?.username ?? 'Toi',
-  isMe: true,
-}))
-
-const allPlayers = computed(() => [mePlayer.value, ...extraPlayers.value])
-const canAddMore = computed(() => allPlayers.value.length < MAX_PLAYERS)
+const canAddMore = computed(() => players.value.length < MAX_PLAYERS)
 
 const selectedFriendIds = computed(() =>
-  extraPlayers.value.filter(p => p.isFriend).map(p => p.id)
+  players.value.filter(p => p.isFriend).map(p => p.id)
 )
 
 function onPlayersSelected(newPlayers) {
-  const remaining = MAX_PLAYERS - allPlayers.value.length
-  extraPlayers.value.push(...newPlayers.slice(0, remaining))
+  const remaining = MAX_PLAYERS - players.value.length
+  players.value.push(...newPlayers.slice(0, remaining))
   showPicker.value = false
 }
 
 function removePlayer(index) {
-  // index is in extraPlayers (0 = first extra player)
-  extraPlayers.value.splice(index, 1)
+  if (players.value[index]?.isMe) return
+  players.value.splice(index, 1)
 }
 
 function openPicker() {
@@ -73,7 +76,7 @@ function startGame() {
     startScore: effectiveScore.value,
     legsToWin:  settings.legsToWin,
     aiProfile:  aiProfile.value,
-    players:    allPlayers.value,
+    players:    players.value,
   }
   router.push({ name: 'x01-game' })
 }
@@ -130,36 +133,40 @@ function startGame() {
       <div class="settings__card">
         <div class="settings__section-label">Joueurs</div>
 
-        <div class="settings__players">
-          <!-- Joueur connecté (non supprimable) -->
-          <div class="settings__player settings__player--me">
-            <div class="settings__player-avatar">{{ avatarLetter(mePlayer) }}</div>
-            <span class="settings__player-name">{{ mePlayer.name }}</span>
-            <span class="settings__player-tag">Toi</span>
-          </div>
+        <p class="settings__hint">Glisse les joueurs pour choisir qui commence.</p>
 
-          <!-- Joueurs supplémentaires -->
-          <div
-            v-for="(player, i) in extraPlayers"
-            :key="player.id"
-            class="settings__player"
-          >
-            <div class="settings__player-avatar" :class="{ 'settings__player-avatar--guest': player.isGuest }">
-              {{ avatarLetter(player) }}
+        <draggable
+          v-model="players"
+          item-key="id"
+          handle=".settings__player-handle"
+          ghost-class="settings__player--ghost"
+          tag="div"
+          class="settings__players"
+        >
+          <template #item="{ element: player, index: i }">
+            <div class="settings__player" :class="{ 'settings__player--me': player.isMe }">
+              <span class="settings__player-handle">
+                <AppIcon name="drag-handle" :width="18" :height="18" />
+              </span>
+              <span class="settings__player-position">{{ i + 1 }}</span>
+              <div class="settings__player-avatar" :class="{ 'settings__player-avatar--guest': player.isGuest }">
+                {{ avatarLetter(player) }}
+              </div>
+              <span class="settings__player-name">{{ player.name }}</span>
+              <span v-if="player.isMe" class="settings__player-tag">Toi</span>
+              <span v-else-if="player.isFriend" class="settings__player-tag">Ami</span>
+              <button v-if="!player.isMe" class="settings__player-remove" @click="removePlayer(i)">
+                <AppIcon name="close" :width="14" :height="14" />
+              </button>
             </div>
-            <span class="settings__player-name">{{ player.name }}</span>
-            <span v-if="player.isFriend" class="settings__player-tag">Ami</span>
-            <button class="settings__player-remove" @click="removePlayer(i)">
-              <AppIcon name="close" :width="14" :height="14" />
-            </button>
-          </div>
+          </template>
+        </draggable>
 
-          <!-- Bouton ajouter -->
-          <button v-if="canAddMore" class="settings__add-player" @click="openPicker">
-            + Ajouter un joueur
-          </button>
-          <p v-else class="settings__hint">Maximum {{ MAX_PLAYERS }} joueurs atteint.</p>
-        </div>
+        <!-- Bouton ajouter -->
+        <button v-if="canAddMore" class="settings__add-player" @click="openPicker">
+          + Ajouter un joueur
+        </button>
+        <p v-else class="settings__hint">Maximum {{ MAX_PLAYERS }} joueurs atteint.</p>
       </div>
 
       <!-- Adversaire DartBot -->
@@ -268,6 +275,29 @@ function startGame() {
       background: rgba($orange, 0.12);
       border: $border-sm solid rgba($orange, 0.3);
     }
+
+    &--ghost {
+      opacity: 0.4;
+    }
+  }
+
+  &__player-handle {
+    display: flex;
+    align-items: center;
+    color: $muted;
+    cursor: grab;
+    touch-action: none;
+    flex-shrink: 0;
+
+    &:active { cursor: grabbing; }
+  }
+
+  &__player-position {
+    @include text-xs;
+    color: $muted;
+    width: 16px;
+    text-align: center;
+    flex-shrink: 0;
   }
 
   &__player-avatar {
