@@ -60,6 +60,8 @@ defineEmits(['close'])
     border-radius: $radius-lg $radius-lg 0 0;
     display: flex;
     flex-direction: column;
+    max-height: 90dvh;
+    overflow-y: auto;
 
     &--sm {
       padding: $padding-md $padding-md $padding-xxl;
@@ -96,6 +98,10 @@ defineEmits(['close'])
     justify-content: space-between;
     padding-bottom: $gap-sm;
     border-bottom: 1px solid rgba($white, 0.08);
+    position: sticky;
+    top: 0;
+    background: #1e2b28;
+    z-index: 1;
   }
 
   &__title {

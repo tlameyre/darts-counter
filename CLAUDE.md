@@ -148,10 +148,6 @@ Le router est une exception : Pinia n'est pas disponible au top-level du fichier
 - `meta: { hideNav: true }` pour masquer la BottomNav (vues de jeu)
 - La BottomNav a 4 onglets : Accueil (`/`), Jouer (`/play`), Stats (`/stats`), Profil (`/profile`)
 
-## Git
-
-- Committer et push après chaque tâche terminée avec un message clair
-
 ## Vue /dev (playground)
 
 `src/views/DevView.vue` est un playground accessible uniquement en mode dev via `/dev`. **Chaque nouvelle vue doit y être référencée.**

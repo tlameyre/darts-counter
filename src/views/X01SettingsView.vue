@@ -46,9 +46,7 @@ const effectiveScore = computed(() =>
 
 const canAddMore = computed(() => players.value.length < MAX_PLAYERS)
 
-const selectedFriendIds = computed(() =>
-  players.value.filter(p => p.isFriend).map(p => p.id)
-)
+const selectedPlayerIds = computed(() => players.value.map(p => p.id))
 
 function onPlayersSelected(newPlayers) {
   const remaining = MAX_PLAYERS - players.value.length
@@ -155,6 +153,7 @@ function startGame() {
               <span class="settings__player-name">{{ player.name }}</span>
               <span v-if="player.isMe" class="settings__player-tag">Toi</span>
               <span v-else-if="player.isFriend" class="settings__player-tag">Ami</span>
+              <span v-else-if="player.isRegistered" class="settings__player-tag">Joueur</span>
               <button v-if="!player.isMe" class="settings__player-remove" @click="removePlayer(i)">
                 <AppIcon name="close" :width="14" :height="14" />
               </button>
@@ -182,7 +181,8 @@ function startGame() {
     <X01PlayerPicker
       :show="showPicker"
       :friends="friendStore.friends"
-      :selected-ids="selectedFriendIds"
+      :selected-ids="selectedPlayerIds"
+      :max-additional="MAX_PLAYERS - players.length"
       @close="showPicker = false"
       @select="onPlayersSelected"
     />
