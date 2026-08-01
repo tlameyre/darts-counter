@@ -16,7 +16,7 @@ const props = defineProps({
 
 const emit = defineEmits(['dart', 'miss', 'bust', 'validate', 'undo'])
 
-const mode = ref('dart')
+const mode = ref('volley')
 const volleyStr = ref('')
 
 function selectMode(newMode) {

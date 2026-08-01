@@ -15,8 +15,13 @@ import ProfileView from "../views/ProfileView.vue";
 import ProfileEditView from "../views/ProfileEditView.vue";
 import BadgesView from "../views/BadgesView.vue";
 import X01SettingsView from "../views/X01SettingsView.vue";
+import X01StarterOrderView from "../views/X01StarterOrderView.vue";
 import X01GameView from "../views/X01GameView.vue";
 import FriendsView from "../views/FriendsView.vue";
+import TournamentsView from "../views/TournamentsView.vue";
+import TournamentSettingsView from "../views/TournamentSettingsView.vue";
+import TournamentView from "../views/TournamentView.vue";
+import TournamentJoinView from "../views/TournamentJoinView.vue";
 
 const routes = [
   // Auth
@@ -60,11 +65,21 @@ const routes = [
   },
   { path: "/501", name: "x01-settings", component: X01SettingsView },
   {
+    path: "/501/starter",
+    name: "x01-starter",
+    component: X01StarterOrderView,
+    meta: { hideNav: true },
+  },
+  {
     path: "/501/play",
     name: "x01-game",
     component: X01GameView,
     meta: { hideNav: true },
   },
+  { path: "/tournaments", name: "tournaments", component: TournamentsView },
+  { path: "/tournaments/create", name: "tournament-settings", component: TournamentSettingsView },
+  { path: "/tournaments/join/:code", name: "tournament-join", component: TournamentJoinView },
+  { path: "/tournaments/:id", name: "tournament-detail", component: TournamentView },
 ];
 
 // Route de dev — playground, accessible sans auth
@@ -101,7 +116,7 @@ router.beforeEach(async (to) => {
   }
 
   if (!to.meta.public && !auth.isAuth) {
-    return { name: "login" };
+    return { name: "login", query: { redirect: to.fullPath } };
   }
 
   if (to.meta.public && auth.isAuth) {

@@ -3,17 +3,22 @@ import { ref, computed, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { useAuthStore } from '../store/authStore.js'
 import { useBadgeStore } from '../store/badgeStore.js'
+import { useTournamentStore } from '../store/tournamentStore.js'
 import { GAME_MODES } from '../data/gameModes.js'
 import AppIcon from '../components/AppIcon.vue'
 import RecentBadges from '../components/RecentBadges.vue'
+import ActiveTournaments from '../components/ActiveTournaments.vue'
 
-const router     = useRouter()
-const authStore  = useAuthStore()
-const badgeStore = useBadgeStore()
-const userBadges = ref([])
+const router          = useRouter()
+const authStore       = useAuthStore()
+const badgeStore      = useBadgeStore()
+const tournamentStore = useTournamentStore()
+const userBadges      = ref([])
+const activeTournaments = ref([])
 
 onMounted(async () => {
-  userBadges.value = await badgeStore.fetchUserBadges()
+  userBadges.value        = await badgeStore.fetchUserBadges()
+  activeTournaments.value = await tournamentStore.fetchActiveTournaments()
 })
 
 const displayName = computed(() => {
@@ -58,6 +63,13 @@ const initials = computed(() => {
           </button>
         </div>
       </section>
+
+      <!-- Tournois en cours -->
+      <ActiveTournaments
+        :tournaments="activeTournaments"
+        @tournament-click="id => router.push({ name: 'tournament-detail', params: { id } })"
+        @view-all="router.push({ name: 'tournaments' })"
+      />
 
       <!-- Badges récents -->
       <RecentBadges

@@ -109,6 +109,7 @@ async function onSignOut() {
       <!-- Amis -->
       <ProfileFriendsSection
         :friends="friendStore.friends"
+        :pending-count="friendStore.pendingReceived.length"
         @see-all="router.push({ name: 'friends' })"
       />
 

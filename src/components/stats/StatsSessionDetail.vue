@@ -82,6 +82,11 @@ function formatDate(iso) {
         </button>
       </div>
 
+      <span v-if="session.tournament_id" class="session-detail__badge">
+        <AppIcon name="trophy" :width="12" :height="12" />
+        {{ session.tournaments?.name ?? 'Tournoi' }}
+      </span>
+
       <!-- Résultat 501 -->
       <template v-if="mode === 'x01'">
         <X01Result
@@ -153,6 +158,21 @@ function formatDate(iso) {
 
   &__delete { color: $error; background: rgba($error, 0.1); }
 
+  &__badge {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: $gap-xxs;
+    align-self: center;
+    background: rgba($orange, 0.15);
+    color: $orange;
+    border-radius: $radius-pill;
+    padding: $padding-xxs $padding-sm;
+    @include text-xxs;
+    margin-bottom: $gap-md;
+    flex-shrink: 0;
+  }
+
   &__date {
     @include title-xs;
     color: $muted;
@@ -173,6 +193,7 @@ function formatDate(iso) {
     padding: $padding-xl;
 
     &__date { @include title-sm; }
+    &__badge { @include text-xs; }
   }
 }
 

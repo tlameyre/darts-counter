@@ -27,4 +27,12 @@ export const GAME_MODES = [
     color: "#047857",
     settingsRoute: "x01-settings",
   },
+  {
+    id: "tournament",
+    title: "TOURNOI",
+    description:
+      "Affronte un groupe de joueurs en bracket à élimination directe et suis la progression jusqu'au vainqueur.",
+    color: "#7C3AED",
+    settingsRoute: "tournaments",
+  },
 ];

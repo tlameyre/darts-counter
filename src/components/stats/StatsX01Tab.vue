@@ -66,6 +66,10 @@ function legsToWin(s) {
           <span class="tab__session-title">{{ s.start_score }} – {{ s.legs_played }} manche{{ s.legs_played > 1 ? 's' :
             '' }}</span>
           <div class="tab__session-header-right">
+            <span v-if="s.tournament_id" class="tab__session-badge">
+              <AppIcon name="trophy" :width="12" :height="12" />
+              {{ s.tournaments?.name ?? 'Tournoi' }}
+            </span>
             <span class="tab__session-date">{{ formatDate(s.played_at) }}</span>
             <AppIcon name="arrow-right" :width="16" :height="16" class="tab__session-arrow" />
           </div>
@@ -221,6 +225,23 @@ function legsToWin(s) {
     color: $white;
   }
 
+  &__session-badge {
+    display: flex;
+    align-items: center;
+    gap: $gap-xxs;
+    background: rgba($orange, 0.15);
+    color: $orange;
+    border-radius: $radius-pill;
+    padding: $padding-xxs $padding-xs;
+    @include text-xxs;
+    max-width: 100px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    flex-shrink: 1;
+    min-width: 0;
+  }
+
   &__session-arrow {
     color: $white;
   }
@@ -311,6 +332,11 @@ function legsToWin(s) {
 
     &__session-date {
       @include text-sm;
+    }
+
+    &__session-badge {
+      @include text-xs;
+      max-width: 140px;
     }
 
     &__player-name {

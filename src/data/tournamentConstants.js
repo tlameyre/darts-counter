@@ -1,0 +1,1 @@
+export const MIN_PARTICIPANTS_TO_START = 3

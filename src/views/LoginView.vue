@@ -1,10 +1,11 @@
 <script setup>
 import { ref } from 'vue'
-import { useRouter } from 'vue-router'
+import { useRouter, useRoute } from 'vue-router'
 import { useAuthStore } from '../store/authStore.js'
 import AppButton from '../components/AppButton.vue'
 
 const router    = useRouter()
+const route     = useRoute()
 const authStore = useAuthStore()
 
 const email    = ref('')
@@ -18,7 +19,7 @@ async function onSubmit() {
   loading.value = true
   try {
     await authStore.signIn(email.value, password.value)
-    router.replace({ name: 'play' })
+    router.replace(typeof route.query.redirect === 'string' ? route.query.redirect : { name: 'play' })
   } catch (e) {
     error.value = e.message
   } finally {

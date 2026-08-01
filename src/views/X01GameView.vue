@@ -7,6 +7,7 @@ import { useX01 } from '../composables/useX01.js'
 import { useX01AIOpponent } from '../composables/useX01AIOpponent.js'
 import { useDbStore } from '../store/dbStore.js'
 import { useBadgeStore } from '../store/badgeStore.js'
+import { useTournamentStore } from '../store/tournamentStore.js'
 import DartSlotsHeader from '../components/game/DartSlotsHeader.vue'
 import GameInput from '../components/game/GameInput.vue'
 import X01Result from '../components/x01/X01Result.vue'
@@ -19,11 +20,12 @@ import BadgeUnlockOverlay from '../components/BadgeUnlockOverlay.vue'
 import AppIcon from '../components/AppIcon.vue'
 import AppHeader from '../components/AppHeader.vue'
 
-const router     = useRouter()
-const gameStore  = useGameStore()
-const authStore  = useAuthStore()
-const dbStore    = useDbStore()
-const badgeStore = useBadgeStore()
+const router          = useRouter()
+const gameStore       = useGameStore()
+const authStore       = useAuthStore()
+const dbStore         = useDbStore()
+const badgeStore      = useBadgeStore()
+const tournamentStore = useTournamentStore()
 
 const newBadges  = ref([])
 
@@ -33,6 +35,9 @@ const settings  = gameStore.gameSettings ?? { startScore: 501, legsToWin: 2, pla
 const aiProfile = settings.aiProfile ?? null
 const players   = settings.players ?? null   // null = legacy solo/vs-AI mode
 const isMulti   = players && players.length > 1 && !aiProfile
+
+const tournamentContext  = settings.tournamentContext ?? null
+const isTournamentMatch  = !!tournamentContext
 
 const {
   completedLegs,
@@ -57,7 +62,9 @@ const {
   liveAvgVolley,
   // Multi-player extras
   currentPlayerIndex,
+  legStarterIndex,
   playerCount,
+  meIndex,
   allCompletedLegs,
   allVolleys,
   lastLegWinnerIndex,
@@ -131,10 +138,10 @@ watch(aiWonLeg, (val) => {
   }
 })
 
-// ── Lancers spéciaux en temps réel (joueur 0 = utilisateur connecté) ──────
-watch(() => allVolleys[0].value.length, async (newLen, oldLen) => {
+// ── Lancers spéciaux en temps réel (utilisateur connecté = meIndex) ────────
+watch(() => allVolleys[meIndex].value.length, async (newLen, oldLen) => {
   if (newLen <= oldLen) return
-  const v = allVolleys[0].value[newLen - 1]
+  const v = allVolleys[meIndex].value[newLen - 1]
   if (v.bust) return
   const isTotal = v.darts.length === 1 && v.darts[0].type === 'volley'
   const special = await badgeStore.checkSpecialThrow(
@@ -148,17 +155,20 @@ watch(() => allVolleys[0].value.length, async (newLen, oldLen) => {
 watch(phase, async (val) => {
   if (val !== 'game-over' || !stats.value) return
 
-  const humanLegsWon = allCompletedLegs[0].value.length
+  const humanLegsWon = allCompletedLegs[meIndex].value.length
 
   if (isMulti) {
     // Multi-player: save session for logged-in user with opponents data
-    const opponents = players.slice(1).map((p, i) => ({
-      name:      p.name,
-      legsWon:   allCompletedLegs[i + 1].value.length,
-      avgVolley: computeStatsForPlayer(i + 1)?.avgVolley ?? null,
-      isFriend:  !!p.isFriend,
-      friendId:  p.isFriend ? p.id : null,
-    }))
+    const opponents = players
+      .map((p, i) => ({ p, i }))
+      .filter(({ i }) => i !== meIndex)
+      .map(({ p, i }) => ({
+        name:      p.name,
+        legsWon:   allCompletedLegs[i].value.length,
+        avgVolley: computeStatsForPlayer(i)?.avgVolley ?? null,
+        isFriend:  !!p.isFriend,
+        friendId:  p.isFriend ? p.id : null,
+      }))
     await dbStore.saveX01Session({
       startScore: settings.startScore,
       legsPlayed: Math.max(...allCompletedLegs.map(r => r.value.length)),
@@ -169,7 +179,19 @@ watch(phase, async (val) => {
         humanLegsWon,
         opponents,
       },
+      tournamentId:      tournamentContext?.tournamentId ?? null,
+      tournamentMatchId: tournamentContext?.matchId ?? null,
     })
+
+    if (isTournamentMatch && multiWinnerIndex.value != null) {
+      const winnerParticipantId = players[multiWinnerIndex.value]?.participantId
+      if (winnerParticipantId) {
+        await tournamentStore.recordMatchResult({
+          matchId:             tournamentContext.matchId,
+          winnerParticipantId,
+        })
+      }
+    }
   } else {
     // Solo or vs AI (existing behavior)
     const humanLegsWonAdj = Math.max(0, completedLegs.value.length - (aiProfile ? aiLegsWon.value : 0))
@@ -232,6 +254,7 @@ const playerCards = computed(() => {
           avgVolley:  liveAvgVolley.value,
           lastScore:  humanLastScore.value,
           totalDarts: humanTotalDarts.value,
+          isLegStarter: i === legStarterIndex.value,
         })
       } else {
         const pVols       = allVolleys[i].value
@@ -246,6 +269,7 @@ const playerCards = computed(() => {
           avgVolley:  computeStatsForPlayer(i)?.avgVolley ?? '–',
           lastScore:  pLastVolley?.score ?? null,
           totalDarts: pVols.reduce((sum, v) => sum + v.darts.length, 0),
+          isLegStarter: i === legStarterIndex.value,
         })
       }
     }
@@ -442,7 +466,12 @@ const multiWinnerName = computed(() =>
             </div>
           </div>
           <div class="x01__multi-actions">
-            <button class="x01__multi-btn" @click="router.push({ name: 'x01-settings' })">Rejouer</button>
+            <button
+              v-if="isTournamentMatch"
+              class="x01__multi-btn"
+              @click="router.push({ name: 'tournament-detail', params: { id: tournamentContext.tournamentId } })"
+            >Retour au bracket</button>
+            <button v-else class="x01__multi-btn" @click="router.push({ name: 'x01-settings' })">Rejouer</button>
             <button class="x01__multi-btn x01__multi-btn--ghost" @click="router.push({ name: 'home' })">Accueil</button>
           </div>
         </div>

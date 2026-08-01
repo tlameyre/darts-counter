@@ -1,12 +1,11 @@
 <script setup>
 import { ref, reactive, computed, watch } from 'vue'
 import { useRouter } from 'vue-router'
-import draggable from 'vuedraggable'
 import AppHeader from '../components/AppHeader.vue'
 import AppButton from '../components/AppButton.vue'
-import AppIcon from '../components/AppIcon.vue'
 import X01BotSettings from '../components/x01/X01BotSettings.vue'
 import X01PlayerPicker from '../components/x01/X01PlayerPicker.vue'
+import X01PlayerOrderList from '../components/x01/X01PlayerOrderList.vue'
 import { useGameStore } from '../store/gameStore.js'
 import { useAuthStore } from '../store/authStore.js'
 import { useFriendStore } from '../store/friendStore.js'
@@ -16,12 +15,13 @@ const gameStore   = useGameStore()
 const authStore   = useAuthStore()
 const friendStore = useFriendStore()
 
-const SCORE_OPTIONS = [301, 501]
-const LEGS_OPTIONS  = [1, 2, 3, 5]
+const SCORE_OPTIONS = [101, 170, 301, 501]
+const MIN_LEGS      = 1
+const MAX_LEGS      = 9
 const MAX_PLAYERS   = 4
 
 const settings = reactive({
-  scoreKey:  501,
+  scoreKey:  301,
   legsToWin: 2,
 })
 const customScore = ref(401)
@@ -46,6 +46,14 @@ const effectiveScore = computed(() =>
 
 const canAddMore = computed(() => players.value.length < MAX_PLAYERS)
 
+function decrementLegs() {
+  settings.legsToWin = Math.max(MIN_LEGS, settings.legsToWin - 1)
+}
+
+function incrementLegs() {
+  settings.legsToWin = Math.min(MAX_LEGS, settings.legsToWin + 1)
+}
+
 const selectedPlayerIds = computed(() => players.value.map(p => p.id))
 
 function onPlayersSelected(newPlayers) {
@@ -64,10 +72,6 @@ function openPicker() {
   showPicker.value = true
 }
 
-function avatarLetter(player) {
-  return player.name?.[0]?.toUpperCase() ?? '?'
-}
-
 function startGame() {
   gameStore.gameSettings = {
     mode:       'x01',
@@ -76,7 +80,8 @@ function startGame() {
     aiProfile:  aiProfile.value,
     players:    players.value,
   }
-  router.push({ name: 'x01-game' })
+  const needsStarterDraw = players.value.length > 1 && !aiProfile.value
+  router.push({ name: needsStarterDraw ? 'x01-starter' : 'x01-game' })
 }
 </script>
 
@@ -115,12 +120,18 @@ function startGame() {
       <!-- Manches à gagner -->
       <div class="settings__card">
         <div class="settings__section-label">Manches à gagner</div>
-        <div class="settings__row">
-          <AppButton
-            v-for="l in LEGS_OPTIONS" :key="l"
-            size="small" variant="ghost" :active="settings.legsToWin === l"
-            @click="settings.legsToWin = l"
-          >{{ l }}</AppButton>
+        <div class="settings__stepper">
+          <button
+            class="settings__stepper-btn"
+            :disabled="settings.legsToWin <= MIN_LEGS"
+            @click="decrementLegs"
+          >−</button>
+          <span class="settings__stepper-value">{{ settings.legsToWin }}</span>
+          <button
+            class="settings__stepper-btn"
+            :disabled="settings.legsToWin >= MAX_LEGS"
+            @click="incrementLegs"
+          >+</button>
         </div>
         <p class="settings__hint">
           La partie se termine après {{ settings.legsToWin }} manche{{ settings.legsToWin > 1 ? 's' : '' }}.
@@ -131,35 +142,9 @@ function startGame() {
       <div class="settings__card">
         <div class="settings__section-label">Joueurs</div>
 
-        <p class="settings__hint">Glisse les joueurs pour choisir qui commence.</p>
+        <p class="settings__hint">Glisse pour définir l'ordre des joueurs.</p>
 
-        <draggable
-          v-model="players"
-          item-key="id"
-          handle=".settings__player-handle"
-          ghost-class="settings__player--ghost"
-          tag="div"
-          class="settings__players"
-        >
-          <template #item="{ element: player, index: i }">
-            <div class="settings__player" :class="{ 'settings__player--me': player.isMe }">
-              <span class="settings__player-handle">
-                <AppIcon name="drag-handle" :width="18" :height="18" />
-              </span>
-              <span class="settings__player-position">{{ i + 1 }}</span>
-              <div class="settings__player-avatar" :class="{ 'settings__player-avatar--guest': player.isGuest }">
-                {{ avatarLetter(player) }}
-              </div>
-              <span class="settings__player-name">{{ player.name }}</span>
-              <span v-if="player.isMe" class="settings__player-tag">Toi</span>
-              <span v-else-if="player.isFriend" class="settings__player-tag">Ami</span>
-              <span v-else-if="player.isRegistered" class="settings__player-tag">Joueur</span>
-              <button v-if="!player.isMe" class="settings__player-remove" @click="removePlayer(i)">
-                <AppIcon name="close" :width="14" :height="14" />
-              </button>
-            </div>
-          </template>
-        </draggable>
+        <X01PlayerOrderList v-model="players" removable @remove="removePlayer" />
 
         <!-- Bouton ajouter -->
         <button v-if="canAddMore" class="settings__add-player" @click="openPicker">
@@ -223,6 +208,43 @@ function startGame() {
     :deep(.btn) { flex: 1; }
   }
 
+  &__stepper {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: $gap-lg;
+  }
+
+  &__stepper-btn {
+    width: 44px;
+    height: 44px;
+    border-radius: $radius-pill;
+    border: $border-md solid rgba($white, 0.15);
+    background: rgba($white, 0.05);
+    color: $text-color;
+    @include title-lg;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: border-color 0.15s, color 0.15s, opacity 0.15s;
+
+    &:active:not(:disabled) {
+      border-color: $orange;
+      color: $orange;
+    }
+
+    &:disabled {
+      opacity: 0.3;
+    }
+  }
+
+  &__stepper-value {
+    @include display-sm;
+    color: $white;
+    min-width: 48px;
+    text-align: center;
+  }
+
   &__custom-field {
     display: flex;
     align-items: center;
@@ -256,92 +278,6 @@ function startGame() {
     color: $muted;
   }
 
-  // ── Players section ──────────────────────────────────────────────────────
-  &__players {
-    display: flex;
-    flex-direction: column;
-    gap: $gap-xs;
-  }
-
-  &__player {
-    display: flex;
-    align-items: center;
-    gap: $gap-sm;
-    padding: $padding-sm $padding-md;
-    border-radius: $radius-md;
-    background: rgba($white, 0.05);
-
-    &--me {
-      background: rgba($orange, 0.12);
-      border: $border-sm solid rgba($orange, 0.3);
-    }
-
-    &--ghost {
-      opacity: 0.4;
-    }
-  }
-
-  &__player-handle {
-    display: flex;
-    align-items: center;
-    color: $muted;
-    cursor: grab;
-    touch-action: none;
-    flex-shrink: 0;
-
-    &:active { cursor: grabbing; }
-  }
-
-  &__player-position {
-    @include text-xs;
-    color: $muted;
-    width: 16px;
-    text-align: center;
-    flex-shrink: 0;
-  }
-
-  &__player-avatar {
-    width: 32px;
-    height: 32px;
-    border-radius: $radius-pill;
-    background: $orange;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    @include title-xs;
-    font-weight: 700;
-    color: $white;
-    flex-shrink: 0;
-
-    &--guest {
-      background: rgba($white, 0.15);
-    }
-  }
-
-  &__player-name {
-    flex: 1;
-    @include text-sm;
-    font-weight: 600;
-    color: $text-color;
-  }
-
-  &__player-tag {
-    @include text-xs;
-    color: $muted;
-    background: rgba($white, 0.08);
-    border-radius: $radius-pill;
-    padding: 2px 8px;
-  }
-
-  &__player-remove {
-    color: $muted;
-    display: flex;
-    align-items: center;
-    padding: $padding-xxs;
-
-    &:active { opacity: 0.6; }
-  }
-
   &__add-player {
     @include text-sm;
     color: $muted;
@@ -369,10 +305,11 @@ function startGame() {
     }
 
     &__section-label  { @include title-xl; }
+    &__stepper-btn    { @include title-xl; }
+    &__stepper-value  { @include display-md; }
     &__custom-input   { @include title-lg; padding: $padding-sm $padding-md; }
     &__custom-label   { @include title-lg; }
     &__hint           { @include title-md; }
-    &__player-name    { @include text-md; }
   }
 }
 

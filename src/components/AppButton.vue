@@ -101,6 +101,11 @@ defineProps({
     border-color: $orange;
     color: $white;
   }
+
+  &:disabled {
+    opacity: 0.4;
+    pointer-events: none;
+  }
 }
 
 @media (min-width: $bp-laptop) {

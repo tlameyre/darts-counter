@@ -14,6 +14,7 @@ import { ref, computed } from 'vue'
 export function useX01({ startScore, legsToWin, players = null }) {
   const playerCount = players?.length ?? 1
   const isMulti     = playerCount > 1
+  const meIndex     = players ? Math.max(0, players.findIndex(p => p.isMe)) : 0
 
   // ─── Per-player state ──────────────────────────────────────────────────────
   const allVolleys       = Array.from({ length: playerCount }, () => ref([]))
@@ -23,6 +24,7 @@ export function useX01({ startScore, legsToWin, players = null }) {
   const lastLegWinnerIndex = ref(null)
 
   const currentPlayerIndex = ref(0)
+  const legStarterIndex    = ref(0)
 
   // Writable computed aliases → current player's arrays
   const volleys = computed({
@@ -285,6 +287,7 @@ export function useX01({ startScore, legsToWin, players = null }) {
     // 3+ joueurs : même ordre à chaque manche (toujours le joueur placé en premier).
     const legsPlayed           = allLegsOrdered[0].value.length
     currentPlayerIndex.value   = playerCount === 2 ? legsPlayed % 2 : 0
+    legStarterIndex.value      = currentPlayerIndex.value
     phase.value                = 'playing'
   }
 
@@ -376,7 +379,7 @@ export function useX01({ startScore, legsToWin, players = null }) {
     }
   }
 
-  const stats = computed(() => computeStatsForPlayer(0))
+  const stats = computed(() => computeStatsForPlayer(meIndex))
 
   return {
     // State
@@ -405,7 +408,9 @@ export function useX01({ startScore, legsToWin, players = null }) {
     liveAvgVolley,
     // Multi-player
     currentPlayerIndex,
+    legStarterIndex,
     playerCount,
+    meIndex,
     allCompletedLegs,
     allVolleys,
     lastLegWinnerIndex,

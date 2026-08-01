@@ -20,11 +20,89 @@ import SvgDartboard from '../components/x01/SvgDartboard.vue'
 import GameInput from '../components/game/GameInput.vue'
 import FriendsView from './FriendsView.vue'
 import StatsWarmupDetailView from './StatsWarmupDetailView.vue'
+import TournamentView from './TournamentView.vue'
+import TournamentJoinView from './TournamentJoinView.vue'
+import { generateBracket, resolveMatches } from '../composables/useTournamentBracket.js'
+import { useGameStore } from '../store/gameStore.js'
 
-const router = useRouter()
+const router    = useRouter()
+const gameStore = useGameStore()
 
 // --- Preview FriendsView ---
 const showFriendsPreview = ref(false)
+
+// --- Preview TournamentView (bracket avec byes + double élimination + pending) ---
+const MOCK_HOSTS = [{ user_id: 'mock-me', role: 'creator' }]
+
+function buildMockTournament({ playerCount, doubleElimination }) {
+  const roster = Array.from({ length: playerCount }, (_, i) => ({ id: `p${i + 1}`, name: `Joueur ${i + 1}` }))
+  const { seeded, matches } = generateBracket({ roster, seedingMethod: 'manual', doubleElimination })
+  const seedToParticipantId = Object.fromEntries(seeded.map(p => [p.seed, `part-${p.seed}`]))
+  const resolved = resolveMatches(matches, seedToParticipantId)
+  return {
+    tournament: {
+      id: 'mock-tournament', name: `Mock ${playerCount} joueurs${doubleElimination ? ' — double élim' : ''}`,
+      description: 'Tournoi de démonstration', join_code: 'T-DEV01',
+      start_score: 501, legs_to_win: 2, status: 'in_progress', winner_participant_id: null,
+    },
+    hosts: MOCK_HOSTS,
+    participants: seeded.map(p => ({ id: `part-${p.seed}`, seed: p.seed, player_data: { name: p.name } })),
+    matches: resolved.map(m => ({
+      id: m.key,
+      round: m.round,
+      bracket_type: m.bracketType,
+      slot_in_round: m.slotInRound,
+      player1_participant_id: m.player1ParticipantId,
+      player2_participant_id: m.player2ParticipantId,
+      winner_participant_id: m.winnerParticipantId,
+      status: m.status,
+      next_match_id: m.nextMatchKey,
+      next_match_slot: m.nextMatchSlot,
+      loser_next_match_id: m.loserNextMatchKey,
+      loser_next_match_slot: m.loserNextMatchSlot,
+    })),
+  }
+}
+function buildMockPendingTournament() {
+  return {
+    tournament: {
+      id: 'mock-pending', name: 'Tournoi pas encore démarré',
+      description: 'En attente de participants', join_code: 'T-DEV02',
+      start_score: 501, legs_to_win: 2, status: 'pending', winner_participant_id: null,
+    },
+    hosts: MOCK_HOSTS,
+    participants: [
+      { id: 'part-1', seed: null, user_id: 'mock-me', player_data: { name: 'Toi' } },
+      { id: 'part-2', seed: null, player_data: { name: 'Bob' } },
+    ],
+    matches: [],
+  }
+}
+const mockTournamentByes       = buildMockTournament({ playerCount: 5, doubleElimination: false })
+const mockTournamentDoubleElim = buildMockTournament({ playerCount: 4, doubleElimination: true })
+const mockTournamentPending    = buildMockPendingTournament()
+const showTournamentByesPreview       = ref(false)
+const showTournamentDoubleElimPreview = ref(false)
+const showTournamentPendingPreview    = ref(false)
+const showTournamentJoinPreview       = ref(false)
+const mockJoinPreview = {
+  name: 'Tournoi de démonstration', description: 'Preview de la page de rejoindre',
+  host_name: 'Théotime', participant_count: 2, status: 'pending',
+}
+
+function openMockTournamentMatch() {
+  gameStore.gameSettings = {
+    mode: 'x01', startScore: 501, legsToWin: 1, aiProfile: null,
+    players: [
+      { id: 'mock-p1', name: 'Joueur 1', participantId: 'mock-part-1' },
+      { id: 'mock-p2', name: 'Joueur 2', participantId: 'mock-part-2' },
+    ],
+    // id de tournoi/match factices : "Retour au bracket" pointera vers un tournoi
+    // inexistant, ce qui est attendu ici — utile uniquement pour vérifier le bouton.
+    tournamentContext: { tournamentId: 'mock-tournament', matchId: 'mock-match' },
+  }
+  router.push({ name: 'x01-game' })
+}
 
 // --- Preview SvgDartboard ---
 const showDartboardPreview = ref(false)
@@ -98,7 +176,10 @@ const views = [
   { name: 'score-settings', label: 'Réglages Score' },
   { name: 'warmup-settings',label: 'Réglages Warmup' },
   { name: 'x01-settings',  label: 'Réglages 501' },
+  { name: 'x01-starter',   label: 'Partie 501 — Qui commence' },
   { name: 'x01-game',      label: 'Partie 501' },
+  { name: 'tournaments',        label: 'Tournois — Liste' },
+  { name: 'tournament-settings', label: 'Tournois — Création' },
   { name: 'login',          label: 'Login' },
   { name: 'register',       label: 'Register' },
 ]
@@ -157,6 +238,18 @@ const mockSent = [
       <h2 class="dev__section-title">Vue Amis (preview)</h2>
       <div class="dev__buttons">
         <button class="dev__btn" @click="showFriendsPreview = true">Ouvrir la vue Amis</button>
+      </div>
+    </section>
+
+    <!-- TournamentView — aperçu plein écran avec données fictives -->
+    <section class="dev__section">
+      <h2 class="dev__section-title">Vue Tournoi — bracket (preview)</h2>
+      <div class="dev__buttons">
+        <button class="dev__btn" @click="showTournamentByesPreview = true">Bracket 5 joueurs (avec byes)</button>
+        <button class="dev__btn" @click="showTournamentDoubleElimPreview = true">Bracket 4 joueurs (double élimination)</button>
+        <button class="dev__btn" @click="showTournamentPendingPreview = true">Tournoi pas démarré (Infos/Participants)</button>
+        <button class="dev__btn" @click="showTournamentJoinPreview = true">Page "Rejoindre par code"</button>
+        <button class="dev__btn" @click="openMockTournamentMatch">Match tournoi (bouton "Retour au bracket")</button>
       </div>
     </section>
 
@@ -238,6 +331,30 @@ const mockSent = [
     <div v-if="showWarmupDetailPreview" class="dev__fullscreen-preview">
       <StatsWarmupDetailView :mock-sessions="mockWarmupSessions" />
       <button class="dev__close-preview" @click="showWarmupDetailPreview = false">✕ Fermer</button>
+    </div>
+
+    <!-- TournamentView plein écran (byes) -->
+    <div v-if="showTournamentByesPreview" class="dev__fullscreen-preview">
+      <TournamentView :mock-tournament="mockTournamentByes" />
+      <button class="dev__close-preview" @click="showTournamentByesPreview = false">✕ Fermer</button>
+    </div>
+
+    <!-- TournamentView plein écran (double élimination) -->
+    <div v-if="showTournamentDoubleElimPreview" class="dev__fullscreen-preview">
+      <TournamentView :mock-tournament="mockTournamentDoubleElim" />
+      <button class="dev__close-preview" @click="showTournamentDoubleElimPreview = false">✕ Fermer</button>
+    </div>
+
+    <!-- TournamentView plein écran (pas démarré) -->
+    <div v-if="showTournamentPendingPreview" class="dev__fullscreen-preview">
+      <TournamentView :mock-tournament="mockTournamentPending" />
+      <button class="dev__close-preview" @click="showTournamentPendingPreview = false">✕ Fermer</button>
+    </div>
+
+    <!-- TournamentJoinView plein écran -->
+    <div v-if="showTournamentJoinPreview" class="dev__fullscreen-preview">
+      <TournamentJoinView :mock-preview="mockJoinPreview" />
+      <button class="dev__close-preview" @click="showTournamentJoinPreview = false">✕ Fermer</button>
     </div>
   </div>
 </template>

@@ -3,21 +3,28 @@ import { computed } from 'vue'
 import AppIcon from './AppIcon.vue'
 import { useRoute } from 'vue-router'
 import { useFriendStore } from '../store/friendStore.js'
+import { useTournamentStore } from '../store/tournamentStore.js'
 
-const route       = useRoute()
-const friendStore = useFriendStore()
+const route           = useRoute()
+const friendStore     = useFriendStore()
+const tournamentStore = useTournamentStore()
 
 const tabs = [
-  { name: 'home',    label: 'Accueil', icon: 'home' },
-  { name: 'play',    label: 'Jouer',   icon: 'dartboard' },
-  { name: 'stats',   label: 'Stats',   icon: 'chart' },
-  { name: 'profile', label: 'Profil',  icon: 'user' },
+  { name: 'home',        label: 'Accueil',  icon: 'home' },
+  { name: 'play',        label: 'Jouer',    icon: 'dartboard' },
+  { name: 'tournaments', label: 'Tournoi',  icon: 'trophy' },
+  { name: 'stats',       label: 'Stats',    icon: 'chart' },
+  { name: 'profile',     label: 'Profil',   icon: 'user' },
 ]
 
 // L'onglet profil est actif sur /profile, /profile/edit et /profile/badges
 const profileRoutes = new Set(['profile', 'profile-edit', 'badges'])
 
-const pendingCount = computed(() => friendStore.pendingReceived.length)
+// L'onglet tournoi reste actif sur toutes les sous-vues du mode tournoi
+const tournamentRoutes = new Set(['tournaments', 'tournament-settings', 'tournament-detail', 'tournament-join'])
+
+const pendingCount        = computed(() => friendStore.pendingReceived.length)
+const unseenTournamentCount = computed(() => tournamentStore.unseenTournamentCount)
 </script>
 
 <template>
@@ -29,14 +36,15 @@ const pendingCount = computed(() => friendStore.pendingReceived.length)
       class="bottom-nav__tab"
       :class="{
         'bottom-nav__tab--active':
-          tab.name === 'profile'
-            ? profileRoutes.has(route.name)
-            : route.name === tab.name
+          tab.name === 'profile' ? profileRoutes.has(route.name)
+          : tab.name === 'tournaments' ? tournamentRoutes.has(route.name)
+          : route.name === tab.name
       }"
     >
       <div class="bottom-nav__icon-wrap">
         <AppIcon :name="tab.icon" :width="24" :height="24" />
         <span v-if="tab.name === 'profile' && pendingCount" class="bottom-nav__dot" />
+        <span v-if="tab.name === 'tournaments' && unseenTournamentCount" class="bottom-nav__dot" />
       </div>
       <span class="bottom-nav__label">{{ tab.label }}</span>
     </router-link>

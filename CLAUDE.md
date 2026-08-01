@@ -146,7 +146,7 @@ Le router est une exception : Pinia n'est pas disponible au top-level du fichier
 
 - Routes protégées par défaut — `meta: { public: true }` pour les routes publiques
 - `meta: { hideNav: true }` pour masquer la BottomNav (vues de jeu)
-- La BottomNav a 4 onglets : Accueil (`/`), Jouer (`/play`), Stats (`/stats`), Profil (`/profile`)
+- La BottomNav a 5 onglets : Accueil (`/`), Jouer (`/play`), Tournoi (`/tournaments`), Stats (`/stats`), Profil (`/profile`)
 
 ## Vue /dev (playground)
 

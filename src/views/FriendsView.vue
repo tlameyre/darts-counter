@@ -33,7 +33,14 @@ const addFeedback = ref({ message: '', isError: false })
 const searchResults  = ref([])
 const searchLoading  = ref(false)
 const sentUserIds    = ref(new Set())
-let   searchTimeout  = null
+let   searchTimeout   = null
+let   feedbackTimeout = null
+
+function setFeedback(message, isError = false) {
+  clearTimeout(feedbackTimeout)
+  addFeedback.value = { message, isError }
+  if (message) feedbackTimeout = setTimeout(() => { addFeedback.value = { message: '', isError: false } }, 3000)
+}
 
 const isDmcCode = computed(() => /^DMC-/i.test(addInput.value.trim()))
 
@@ -47,9 +54,10 @@ const isLoading       = computed(() => isMock.value ? false                     
 
 watch(addInput, (val) => {
   clearTimeout(searchTimeout)
-  addFeedback.value = { message: '', isError: false }
 
   const q = val.trim()
+  if (q) setFeedback('')
+
   if (!q || isDmcCode.value || isMock.value) {
     searchResults.value = []
     return
@@ -69,19 +77,19 @@ watch(addInput, (val) => {
 async function onAddFriend() {
   if (!addInput.value.trim()) return
   if (isMock.value) {
-    addFeedback.value = { message: 'Demande envoyée à Pro180 !', isError: false }
-    addInput.value    = ''
+    setFeedback('Demande envoyée à Pro180 !')
+    addInput.value = ''
     return
   }
-  addLoading.value  = true
-  addFeedback.value = { message: '', isError: false }
+  addLoading.value = true
+  setFeedback('')
   const result = await friendStore.sendRequest(addInput.value)
   if (result.success) {
-    addFeedback.value = { message: `Demande envoyée à ${result.name} !`, isError: false }
-    addInput.value    = ''
-    searchResults.value = []
+    setFeedback(`Demande envoyée à ${result.name} !`)
+    addInput.value       = ''
+    searchResults.value  = []
   } else {
-    addFeedback.value = { message: result.error, isError: true }
+    setFeedback(result.error, true)
   }
   addLoading.value = false
 }
@@ -90,10 +98,12 @@ async function onAddFromSearch(user) {
   sentUserIds.value.add(user.id)
   const result = await friendStore.sendRequest(user.friend_code)
   if (result.success) {
-    addFeedback.value = { message: `Demande envoyée à ${result.name} !`, isError: false }
+    setFeedback(`Demande envoyée à ${result.name} !`)
+    addInput.value       = ''
+    searchResults.value  = []
   } else {
     sentUserIds.value.delete(user.id)
-    addFeedback.value = { message: result.error, isError: true }
+    setFeedback(result.error, true)
   }
 }
 

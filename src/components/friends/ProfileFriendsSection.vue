@@ -3,6 +3,7 @@ import AppIcon from '../AppIcon.vue'
 
 defineProps({
   friends: { type: Array, required: true },
+  pendingCount: { type: Number, default: 0 },
 })
 
 defineEmits(['see-all'])
@@ -23,6 +24,7 @@ function initial(f) {
       <h2 class="pf-section__title">Amis <span>{{ friends.length }}</span></h2>
       <button class="pf-section__more" @click="$emit('see-all')">
         Voir tout
+        <span v-if="pendingCount" class="pf-section__pending">{{ pendingCount }}</span>
       </button>
     </div>
 
@@ -69,10 +71,24 @@ function initial(f) {
   }
 
   &__more {
+    display: flex;
+    align-items: center;
+    gap: $gap-xs;
     @include title-sm;
     color: $orange;
     transition: opacity 0.15s;
     &:active { opacity: 0.7; }
+  }
+
+  &__pending {
+    @include text-xs;
+    color: $white;
+    background: $orange;
+    border-radius: $radius-pill;
+    padding: 1px 6px;
+    min-width: 18px;
+    text-align: center;
+    line-height: 1.4;
   }
 
   &__list {
