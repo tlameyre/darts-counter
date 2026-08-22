@@ -29,13 +29,14 @@ const {
 
 watch(gameOver, async (val) => {
   if (val) {
+    const { zones: _zones, ...restSettings } = gameStore.gameSettings
     await dbStore.saveWarmupSession({
       zones: currentZones.value,
       totalDarts: sessionStats.value.total,
       hits: sessionStats.value.hits,
       durationS: Math.round(totalDurationMs.value / 1000),
       settings: {
-        ...gameStore.gameSettings,
+        ...restSettings,
         zoneRecap: zoneRecapStats.value,  // toutes les zones pour l'historique
       },
     })
@@ -63,6 +64,11 @@ function closeMenu() {
 function handleQuit() {
   showMenuModal.value = false
   router.push({ name: 'warmup-settings' })
+}
+
+function handleFinish() {
+  showMenuModal.value = false
+  endSession()
 }
 
 const newBadges = ref([])
@@ -149,7 +155,7 @@ onUnmounted(() => {
       @restart="router.push({ name: 'warmup-settings' })" @home="router.push({ name: 'home' })" />
 
     <WarmupMenuModal :show="showMenuModal" :zones="currentZones" @close="closeMenu"
-      @zone-change="changeZones" @finish="endSession" @quit="handleQuit" />
+      @zone-change="changeZones" @finish="handleFinish" @quit="handleQuit" />
 
     <BadgeUnlockOverlay :badges="newBadges" @done="newBadges = []" />
   </div>
