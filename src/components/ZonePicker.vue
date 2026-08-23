@@ -11,16 +11,11 @@ const SECTOR_ROWS = [
   [16, 17, 18, 19, 20],
 ]
 
-const TYPES_NUM = [
+const TYPES = [
   { id: 'A', label: 'Tout' },
   { id: 'S', label: 'Simple' },
   { id: 'D', label: 'Double' },
   { id: 'T', label: 'Triple' },
-]
-const TYPES_BULL = [
-  { id: 'AB', label: 'Tout' },
-  { id: 'SB', label: 'Outer (25)' },
-  { id: 'B', label: 'Bull (50)' },
 ]
 
 const props = defineProps({
@@ -29,39 +24,53 @@ const props = defineProps({
 })
 const emit = defineEmits(['update:modelValue'])
 
-const availableTypes = computed(() => {
-  const first = props.multiple ? props.modelValue[0] : props.modelValue
-  return first?.sector === null ? TYPES_BULL : TYPES_NUM
-})
+function isBull(zone) {
+  return zone?.sector === null
+}
+
+// Le bull stocke son type en AB/SB/B (legacy, pas de triple) — on le traduit
+// vers le référentiel générique A/S/D partagé avec les secteurs numériques.
+function genericType(zone) {
+  if (!zone) return 'A'
+  if (isBull(zone)) {
+    if (zone.type === 'B') return 'D'
+    if (zone.type === 'SB') return 'S'
+    return 'A'
+  }
+  return zone.type
+}
+
+function bullType(generic) {
+  if (generic === 'S') return 'SB'
+  if (generic === 'D') return 'B'
+  return 'AB'
+}
+
+const isBullSelected = computed(() =>
+  props.multiple ? props.modelValue.some(isBull) : isBull(props.modelValue)
+)
 
 function selectSector(sector) {
   if (!props.multiple) {
-    let type = props.modelValue.type
-    if (sector === null && !['AB', 'B', 'SB'].includes(type)) type = 'AB'
-    if (sector !== null && !['A', 'S', 'D', 'T'].includes(type)) type = 'D'
-    emit('update:modelValue', { sector, type })
-    return
-  }
-  const isBullKind = sector === null
-  const currentIsBull = props.modelValue[0]?.sector === null
-  if (isBullKind !== currentIsBull) {
-    emit('update:modelValue', [{ sector, type: isBullKind ? 'AB' : 'A' }])
+    const generic = genericType(props.modelValue)
+    emit('update:modelValue', { sector, type: sector === null ? bullType(generic) : generic })
     return
   }
   const idx = props.modelValue.findIndex(z => z.sector === sector)
   if (idx >= 0) {
     if (props.modelValue.length > 1) emit('update:modelValue', props.modelValue.filter((_, i) => i !== idx))
-  } else if (props.modelValue.length < 5) {
-    const sharedType = props.modelValue[0]?.type ?? 'A'
-    emit('update:modelValue', [...props.modelValue, { sector, type: sharedType }])
+    return
   }
+  if (props.modelValue.length >= 5) return
+  const generic = genericType(props.modelValue[0])
+  emit('update:modelValue', [...props.modelValue, { sector, type: sector === null ? bullType(generic) : generic }])
 }
 
 function selectType(type) {
   if (!props.multiple) {
-    emit('update:modelValue', { ...props.modelValue, type })
+    emit('update:modelValue', { ...props.modelValue, type: isBull(props.modelValue) ? bullType(type) : type })
   } else {
-    emit('update:modelValue', props.modelValue.map(z => ({ ...z, type })))
+    emit('update:modelValue', props.modelValue.map(z => ({ ...z, type: isBull(z) ? bullType(type) : type })))
   }
 }
 
@@ -71,16 +80,16 @@ function cellSelected(n) {
 }
 
 function activeType() {
-  if (!props.multiple) return props.modelValue.type
-  return props.modelValue[0]?.type
+  if (!props.multiple) return genericType(props.modelValue)
+  return genericType(props.modelValue[0])
 }
 </script>
 
 <template>
   <div class="zone-picker">
     <div class="zone-picker__types">
-      <AppButton v-for="t in availableTypes" :key="t.id" size="small" variant="ghost" :active="activeType() === t.id"
-        @click="selectType(t.id)">{{ t.label }}</AppButton>
+      <AppButton v-for="t in TYPES" :key="t.id" size="small" variant="ghost" :active="activeType() === t.id"
+        :disabled="t.id === 'T' && isBullSelected" @click="selectType(t.id)">{{ t.label }}</AppButton>
     </div>
 
     <div class="zone-picker__grid">
@@ -89,7 +98,7 @@ function activeType() {
           :class="{ 'zone-picker__cell--selected': cellSelected(n) }" @click="selectSector(n)">{{ n }}</button>
       </template>
       <button class="zone-picker__cell zone-picker__cell--bull"
-        :class="{ 'zone-picker__cell--selected': modelValue.sector === null }" @click="selectSector(null)">
+        :class="{ 'zone-picker__cell--selected': cellSelected(null) }" @click="selectSector(null)">
         BULL
       </button>
     </div>
@@ -100,7 +109,8 @@ function activeType() {
 .zone-picker {
   display: flex;
   flex-direction: column;
-  gap: $gap-xl;
+  gap: $gap-md;
+  flex: 1;
 
   &__grid {
     display: grid;
@@ -108,10 +118,10 @@ function activeType() {
     border-radius: $radius-sm;
     overflow: hidden;
     border: $border-md solid $white;
+    flex: 1;
   }
 
   &__cell {
-    aspect-ratio: 1;
     display: flex;
     align-items: center;
     justify-content: center;

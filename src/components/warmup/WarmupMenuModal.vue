@@ -31,7 +31,7 @@ function handleClose() {
 </script>
 
 <template>
-  <AppModal :show size="lg" title="Échauffement en cours" min-height="50dvh" @close="handleClose">
+  <AppModal :show size="lg" title="Échauffement en cours" min-height="75dvh" @close="handleClose">
     <ZonePicker :multiple="true" v-model="tempZones" />
 
     <div class="wm-modal__divider" />
