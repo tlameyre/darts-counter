@@ -57,7 +57,7 @@ const initials = computed(() => {
         <div class="home__modes">
           <button v-for="mode in GAME_MODES" :key="mode.id" class="home__mode-card"
             :style="{ '--mode-color': mode.color }" @click="router.push({ name: mode.settingsRoute })">
-            <AppIcon name="dartboard" :width="22" :height="22" class="home__mode-icon" />
+            <AppIcon :name="mode.icon" :width="22" :height="22" class="home__mode-icon" />
             <span class="home__mode-label">{{ mode.title.replace('\n', ' ') }}</span>
             <AppIcon name="arrow-left" :width="14" :height="14" class="home__mode-arrow" />
           </button>

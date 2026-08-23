@@ -9,6 +9,7 @@ export const GAME_MODES = [
     description:
       "Calcule le total de ta volée et entraîne-toi à compter rapidement.",
     color: "#EB6343",
+    icon: "calculator",
     settingsRoute: "score-settings",
   },
   {
@@ -17,6 +18,7 @@ export const GAME_MODES = [
     description:
       "Travaille une zone de la cible sur une durée définie et suis ta précision.",
     color: "#1D4ED8",
+    icon: "dartboard",
     settingsRoute: "warmup-settings",
   },
   {
@@ -25,6 +27,7 @@ export const GAME_MODES = [
     description:
       "Descends de 501 (ou 301) à 0 en comptant tes volées. Analyse tes moyennes et tes checkouts.",
     color: "#047857",
+    icon: "dartboard",
     settingsRoute: "x01-settings",
   },
   {
@@ -33,6 +36,7 @@ export const GAME_MODES = [
     description:
       "Affronte un groupe de joueurs en bracket à élimination directe et suis la progression jusqu'au vainqueur.",
     color: "#7C3AED",
+    icon: "trophy",
     settingsRoute: "tournaments",
   },
 ];
