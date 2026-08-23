@@ -59,7 +59,7 @@ function startGame() {
         </div>
       </div>
 
-      <div class="settings__card">
+      <div class="settings__card zone-picker__card">
         <div class="settings__section-label">Zones à travailler</div>
         <ZonePicker :multiple="true" v-model="settings.zones" />
       </div>
@@ -74,8 +74,8 @@ function startGame() {
   display: flex;
   flex-direction: column;
   min-height: 100dvh;
-  padding: $padding-md $padding-md calc($padding-xxl + 64px);
-  gap: $gap-md;
+  padding: $padding-md $padding-md calc($padding-xl + 69px);
+  gap: $gap-xl;
 
   &__main {
     flex: 1;
@@ -83,14 +83,16 @@ function startGame() {
     flex-direction: column;
     width: 100%;
     margin: 0 auto;
-    gap: $gap-xxl;
-    padding: $padding-md 0;
+    gap: $gap-xl;
   }
 
   &__card {
     display: flex;
     flex-direction: column;
     gap: $gap-md;
+    &.zone-picker__card {
+      flex: 1;
+    }
   }
 
   &__section-label {
@@ -136,7 +138,7 @@ function startGame() {
     transition: flex-grow 0.3s ease, opacity 0.25s ease, margin-left 0.3s ease;
 
     &--visible {
-      flex-grow: 2;
+      flex-grow: 1;
       opacity: 1;
       margin-left: $gap-xs;
     }
@@ -167,7 +169,7 @@ function startGame() {
 
 @media (min-width: $bp-tablet) {
   .settings {
-    padding: $padding-xl $padding-xl calc($padding-xxl + 64px);
+    padding: $padding-xl $padding-xl calc($padding-xl + 69px);
 
     &__card:last-child {
       flex: 1;

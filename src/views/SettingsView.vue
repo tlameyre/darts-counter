@@ -76,22 +76,28 @@ function startGame() {
   display: flex;
   flex-direction: column;
   min-height: 100dvh;
-  padding: $padding-md $padding-md calc($padding-xxl + 64px);
-  gap: $gap-md;
+  padding: $padding-md $padding-md calc($padding-xxl + 69px);
+  gap: $gap-xl;
 
   &__main {
     flex: 1;
     display: flex;
     flex-direction: column;
     width: 100%;
-    gap: $gap-xxl;
-    padding: $padding-md 0;
+    margin: 0 auto;
+    gap: $gap-md;
   }
 
   &__card {
     display: flex;
     flex-direction: column;
     gap: $gap-md;
+  }
+}
+
+@media (min-width: $bp-tablet) {
+  .settings {
+    padding: $padding-xl $padding-xl calc($padding-xl + 69px);
   }
 }
 </style>

@@ -146,15 +146,16 @@ async function createTournament() {
   display: flex;
   flex-direction: column;
   min-height: 100dvh;
-  padding: $padding-md $padding-md calc($padding-xxl + 64px);
-  gap: $gap-md;
+  padding: $padding-md $padding-md calc($padding-xxl + 69px);
+  gap: $gap-xl;
 
   &__main {
     flex: 1;
     display: flex;
     flex-direction: column;
-    gap: $gap-xxl;
-    padding: $padding-md 0;
+    width: 100%;
+    margin: 0 auto;
+    gap: $gap-md;
   }
 
   &__card {
@@ -293,15 +294,9 @@ async function createTournament() {
   }
 }
 
-@media (min-width: $bp-laptop) {
+@media (min-width: $bp-tablet) {
   .settings {
-    padding: $padding-xl $padding-xl calc($padding-xxl + 64px);
-    gap: $gap-lg;
-
-    &__main {
-      gap: $gap-xxl;
-      padding: $padding-lg 0;
-    }
+    padding: $padding-xl $padding-xl calc($padding-xl + 69px);
 
     &__section-label     { @include title-xl; }
     &__name-input         { @include text-lg; }
