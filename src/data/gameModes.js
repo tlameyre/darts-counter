@@ -31,6 +31,15 @@ export const GAME_MODES = [
     settingsRoute: "x01-settings",
   },
   {
+    id: "tactics",
+    title: "TACTICS",
+    description:
+      "Ferme les zones 20 à 12 puis Double, Triple et Bull, le plus vite possible. Façon cricket.",
+    color: "#DC2626",
+    icon: "cricket-closed",
+    settingsRoute: "tactics-settings",
+  },
+  {
     id: "tournament",
     title: "TOURNOI",
     description:

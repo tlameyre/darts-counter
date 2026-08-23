@@ -17,6 +17,9 @@ import BadgesView from "../views/BadgesView.vue";
 import X01SettingsView from "../views/X01SettingsView.vue";
 import X01StarterOrderView from "../views/X01StarterOrderView.vue";
 import X01GameView from "../views/X01GameView.vue";
+import TacticsSettingsView from "../views/TacticsSettingsView.vue";
+import TacticsStarterOrderView from "../views/TacticsStarterOrderView.vue";
+import TacticsGameView from "../views/TacticsGameView.vue";
 import FriendsView from "../views/FriendsView.vue";
 import TournamentsView from "../views/TournamentsView.vue";
 import TournamentSettingsView from "../views/TournamentSettingsView.vue";
@@ -74,6 +77,19 @@ const routes = [
     path: "/501/play",
     name: "x01-game",
     component: X01GameView,
+    meta: { hideNav: true },
+  },
+  { path: "/tactics", name: "tactics-settings", component: TacticsSettingsView },
+  {
+    path: "/tactics/starter",
+    name: "tactics-starter",
+    component: TacticsStarterOrderView,
+    meta: { hideNav: true },
+  },
+  {
+    path: "/tactics/play",
+    name: "tactics-game",
+    component: TacticsGameView,
     meta: { hideNav: true },
   },
   { path: "/tournaments", name: "tournaments", component: TournamentsView },

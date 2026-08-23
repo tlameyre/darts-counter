@@ -107,6 +107,63 @@ export const useDbStore = defineStore('db', () => {
     return data
   }
 
+  /**
+   * SQL à exécuter dans Supabase pour créer la table tactics_sessions :
+   *
+   * CREATE TABLE public.tactics_sessions (
+   *   id           uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+   *   user_id      uuid REFERENCES auth.users ON DELETE CASCADE NOT NULL,
+   *   played_at    timestamptz DEFAULT now(),
+   *   legs_played  int NOT NULL,
+   *   total_darts  int,
+   *   avg_darts    numeric,
+   *   min_darts    int,
+   *   max_darts    int,
+   *   settings     jsonb
+   * );
+   * ALTER TABLE public.tactics_sessions ENABLE ROW LEVEL SECURITY;
+   * CREATE POLICY "Users manage own tactics_sessions"
+   *   ON public.tactics_sessions FOR ALL USING (auth.uid() = user_id);
+   */
+  async function saveTacticsSession({ legsPlayed, stats, settings }) {
+    const user = getUser()
+    if (!user) return null
+    const { data, error } = await supabase.from('tactics_sessions').insert({
+      user_id:     user.id,
+      legs_played: legsPlayed,
+      total_darts: stats.totalDarts ?? null,
+      avg_darts:   stats.avgDarts   ?? null,
+      min_darts:   stats.bestLeg?.darts  ?? null,
+      max_darts:   stats.worstLeg?.darts ?? null,
+      settings,
+    }).select().single()
+    if (error) {
+      console.error('[dbStore] saveTacticsSession:', error.message)
+      return null
+    }
+    return data
+  }
+
+  async function fetchTacticsSessions(limit = 20) {
+    const user = getUser()
+    if (!user) return []
+    const { data, error } = await supabase
+      .from('tactics_sessions')
+      .select('*')
+      .eq('user_id', user.id)
+      .order('played_at', { ascending: false })
+      .limit(limit)
+    if (error) return []
+    return data
+  }
+
+  async function deleteTacticsSession(id) {
+    const user = getUser()
+    if (!user) return
+    const { error } = await supabase.from('tactics_sessions').delete().eq('id', id).eq('user_id', user.id)
+    if (error) console.error('[dbStore] deleteTacticsSession:', error.message)
+  }
+
   async function fetchGameSessions(limit = 20) {
     const user = getUser()
     if (!user) return []
@@ -464,9 +521,9 @@ export const useDbStore = defineStore('db', () => {
   }
 
   return {
-    saveGameSession, saveWarmupSession, saveX01Session,
-    deleteGameSession, deleteWarmupSession, deleteX01Session,
-    fetchGameSessions, fetchWarmupSessions, fetchWarmupSessionsForChart, fetchX01Sessions,
+    saveGameSession, saveWarmupSession, saveX01Session, saveTacticsSession,
+    deleteGameSession, deleteWarmupSession, deleteX01Session, deleteTacticsSession,
+    fetchGameSessions, fetchWarmupSessions, fetchWarmupSessionsForChart, fetchX01Sessions, fetchTacticsSessions,
     fetchProfileStats, fetchGlobalStats,
     createTournamentRecord, createTournamentParticipants, createTournamentMatches,
     updateTournamentMatchPointers, fetchTournaments, fetchActiveTournaments, fetchTournamentDetail,

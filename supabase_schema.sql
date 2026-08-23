@@ -206,6 +206,29 @@ create policy "Users manage own x01_sessions"
 
 
 -- ============================================================
+-- Sessions Tactics (fermeture façon cricket, 20→12 puis Double/Triple/Bull)
+-- ============================================================
+
+create table public.tactics_sessions (
+  id           uuid primary key default gen_random_uuid(),
+  user_id      uuid references auth.users on delete cascade not null,
+  played_at    timestamptz default now(),
+  legs_played  int not null,
+  total_darts  int,
+  avg_darts    numeric,
+  min_darts    int,
+  max_darts    int,
+  settings     jsonb
+);
+
+alter table public.tactics_sessions enable row level security;
+
+create policy "Users manage own tactics_sessions"
+  on public.tactics_sessions for all
+  using (auth.uid() = user_id);
+
+
+-- ============================================================
 -- Mode Tournoi (format Bracket) — V2 : hôtes, invitation par code,
 -- flow création (pending) → démarrage (in_progress)
 -- ============================================================

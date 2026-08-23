@@ -4,16 +4,22 @@ import DartSlotsBar from '../game/DartSlotsBar.vue'
 import AppIcon from '../AppIcon.vue'
 
 const props = defineProps({
-  darts:  { type: Array,   required: true },
-  locked: { type: Boolean, default: false },
-  zones:  { type: Array,   required: true },
+  darts:    { type: Array,   required: true },
+  locked:   { type: Boolean, default: false },
+  zones:    { type: Array,   required: true },
+  // Restreint chaque ligne à un seul bouton (ex. 'double' pendant une phase où
+  // seul un double compte). null/absent = comportement normal (S/D/T ou Outer/Bull).
+  onlyType:     { type: String, default: null },
+  // Remplace le libellé du bouton restant quand onlyType est utilisé (ex. "DOUBLE"
+  // plutôt que "D20" quand le secteur annoncé n'a pas d'importance).
+  labelOverride: { type: String, default: null },
 })
 
 const emit = defineEmits(['dart', 'miss', 'undo'])
 
 const buttonGroups = computed(() => props.zones.map(zone => {
   const isBull = zone.sector === null
-  const buttons = isBull
+  let buttons = isBull
     ? [
         { key: 'outer', label: 'Outer' },
         { key: 'bull',  label: 'Bull'  },
@@ -23,6 +29,10 @@ const buttonGroups = computed(() => props.zones.map(zone => {
         { key: 'double', label: `D${zone.sector}` },
         { key: 'triple', label: `T${zone.sector}` },
       ]
+  if (props.onlyType) {
+    buttons = buttons.filter(b => b.key === props.onlyType)
+    if (props.labelOverride) buttons = buttons.map(b => ({ ...b, label: props.labelOverride }))
+  }
   return { zone, isBull, buttons }
 }))
 
@@ -64,7 +74,10 @@ function tap(btn, zone) {
         v-for="group in buttonGroups"
         :key="group.zone.sector ?? 'bull'"
         class="warmup-input__zone-row"
-        :class="{ 'warmup-input__zone-row--bull': group.isBull }"
+        :class="{
+          'warmup-input__zone-row--bull':   group.isBull,
+          'warmup-input__zone-row--single': group.buttons.length === 1,
+        }"
       >
         <button
           v-for="btn in group.buttons"
@@ -119,6 +132,10 @@ function tap(btn, zone) {
 
     &--bull {
       grid-template-columns: repeat(2, 1fr);
+    }
+
+    &--single {
+      grid-template-columns: 1fr;
     }
   }
 

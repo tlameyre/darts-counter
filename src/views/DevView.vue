@@ -104,6 +104,22 @@ function openMockTournamentMatch() {
   router.push({ name: 'x01-game' })
 }
 
+// --- Preview partie Tactics (données fictives) ---
+const MOCK_TACTICS_PLAYERS = [
+  { id: 'mock-me', name: 'Toi', isMe: true },
+  { id: 'mock-p2', name: 'Bob', isFriend: true },
+  { id: 'mock-p3', name: 'Clara', isFriend: true },
+  { id: 'mock-p4', name: 'Dan', isFriend: true },
+]
+function openMockTacticsGame({ playerCount = 2 } = {}) {
+  gameStore.gameSettings = {
+    mode: 'tactics',
+    legsToWin: 2,
+    players: MOCK_TACTICS_PLAYERS.slice(0, playerCount),
+  }
+  router.push({ name: 'tactics-game' })
+}
+
 // --- Preview SvgDartboard ---
 const showDartboardPreview = ref(false)
 const lastDart = ref(null)
@@ -178,6 +194,9 @@ const views = [
   { name: 'x01-settings',  label: 'Réglages 501' },
   { name: 'x01-starter',   label: 'Partie 501 — Qui commence' },
   { name: 'x01-game',      label: 'Partie 501' },
+  { name: 'tactics-settings', label: 'Réglages Tactics' },
+  { name: 'tactics-starter',  label: 'Partie Tactics — Qui commence' },
+  { name: 'tactics-game',     label: 'Partie Tactics' },
   { name: 'tournaments',        label: 'Tournois — Liste' },
   { name: 'tournament-settings', label: 'Tournois — Création' },
   { name: 'login',          label: 'Login' },
@@ -250,6 +269,17 @@ const mockSent = [
         <button class="dev__btn" @click="showTournamentPendingPreview = true">Tournoi pas démarré (Infos/Participants)</button>
         <button class="dev__btn" @click="showTournamentJoinPreview = true">Page "Rejoindre par code"</button>
         <button class="dev__btn" @click="openMockTournamentMatch">Match tournoi (bouton "Retour au bracket")</button>
+      </div>
+    </section>
+
+    <!-- Tactics — parties avec données fictives (preview) -->
+    <section class="dev__section">
+      <h2 class="dev__section-title">Tactics — parties avec données fictives (preview)</h2>
+      <div class="dev__buttons">
+        <button class="dev__btn" @click="openMockTacticsGame({ playerCount: 2 })">Partie Tactics — 2 joueurs</button>
+        <button class="dev__btn" @click="openMockTacticsGame({ playerCount: 3 })">Partie Tactics — 3 joueurs</button>
+        <button class="dev__btn" @click="openMockTacticsGame({ playerCount: 4 })">Partie Tactics — 4 joueurs</button>
+        <button class="dev__btn" @click="openMockTacticsGame({ playerCount: 1 })">Partie Tactics — Solo</button>
       </div>
     </section>
 
