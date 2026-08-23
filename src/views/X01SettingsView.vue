@@ -3,7 +3,7 @@ import { ref, reactive, computed, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import AppHeader from '../components/AppHeader.vue'
 import AppButton from '../components/AppButton.vue'
-import X01BotSettings from '../components/x01/X01BotSettings.vue'
+import X01BotConfigModal from '../components/x01/X01BotConfigModal.vue'
 import X01PlayerPicker from '../components/x01/X01PlayerPicker.vue'
 import X01PlayerOrderList from '../components/x01/X01PlayerOrderList.vue'
 import { useGameStore } from '../store/gameStore.js'
@@ -25,8 +25,9 @@ const settings = reactive({
   legsToWin: 2,
 })
 const customScore = ref(401)
-const aiProfile   = ref(null)
-const showPicker  = ref(false)
+const aiProfile     = ref(null)
+const showPicker    = ref(false)
+const showBotConfig = ref(false)
 
 // Ordre libre : "moi" (déplaçable comme les autres) + amis/invités ajoutés
 const players = ref([
@@ -91,6 +92,37 @@ function startGame() {
 
     <main class="settings__main">
 
+      <!-- Joueurs -->
+      <div class="settings__card">
+        <div class="settings__section-label">Joueurs</div>
+
+        <p class="settings__hint">Glisse pour définir l'ordre des joueurs.</p>
+
+        <X01PlayerOrderList
+          v-model="players"
+          removable
+          :bot="aiProfile"
+          @remove="removePlayer"
+          @edit-bot="showBotConfig = true"
+          @remove-bot="aiProfile = null"
+        />
+
+        <!-- Bouton DartBot -->
+        <button
+          v-if="!aiProfile && players.length === 1"
+          class="settings__add-player"
+          @click="showBotConfig = true"
+        >
+          + Jouer contre DartBot
+        </button>
+        <!-- Bouton joueur -->
+        <button v-if="canAddMore && !aiProfile" class="settings__add-player" @click="openPicker">
+          + Ajouter un joueur
+        </button>
+        <p v-else-if="!aiProfile" class="settings__hint">Maximum {{ MAX_PLAYERS }} joueurs atteint.</p>
+
+      </div>
+
       <!-- Score de départ -->
       <div class="settings__card">
         <div class="settings__section-label">Score de départ</div>
@@ -138,25 +170,6 @@ function startGame() {
         </p>
       </div>
 
-      <!-- Joueurs -->
-      <div class="settings__card">
-        <div class="settings__section-label">Joueurs</div>
-
-        <p class="settings__hint">Glisse pour définir l'ordre des joueurs.</p>
-
-        <X01PlayerOrderList v-model="players" removable @remove="removePlayer" />
-
-        <!-- Bouton ajouter -->
-        <button v-if="canAddMore" class="settings__add-player" @click="openPicker">
-          + Ajouter un joueur
-        </button>
-        <p v-else class="settings__hint">Maximum {{ MAX_PLAYERS }} joueurs atteint.</p>
-      </div>
-
-      <!-- Adversaire DartBot -->
-      <div class="settings__card">
-        <X01BotSettings v-model="aiProfile" />
-      </div>
 
     </main>
 
@@ -171,6 +184,14 @@ function startGame() {
       @close="showPicker = false"
       @select="onPlayersSelected"
     />
+
+    <!-- Config DartBot -->
+    <X01BotConfigModal
+      :show="showBotConfig"
+      :model-value="aiProfile"
+      @close="showBotConfig = false"
+      @confirm="aiProfile = $event"
+    />
   </div>
 </template>
 
@@ -179,15 +200,16 @@ function startGame() {
   display: flex;
   flex-direction: column;
   min-height: 100dvh;
-  padding: $padding-md $padding-md calc($padding-xxl + 64px);
-  gap: $gap-md;
+  padding: $padding-md $padding-md calc($padding-md + 69px);
+  gap: $gap-xl;
 
   &__main {
     flex: 1;
     display: flex;
     flex-direction: column;
-    gap: $gap-xxl;
-    padding: $padding-md 0;
+    width: 100%;
+    margin: 0 auto;
+    gap: $gap-md;
   }
 
   &__card {
@@ -294,15 +316,9 @@ function startGame() {
   }
 }
 
-@media (min-width: $bp-laptop) {
+@media (min-width: $bp-tablet) {
   .settings {
-    padding: $padding-xl $padding-xl calc($padding-xxl + 64px);
-    gap: $gap-lg;
-
-    &__main {
-      gap: $gap-xxl;
-      padding: $padding-lg 0;
-    }
+    padding: $padding-xl $padding-xl calc($padding-xl + 69px);
 
     &__section-label  { @include title-xl; }
     &__stepper-btn    { @include title-xl; }

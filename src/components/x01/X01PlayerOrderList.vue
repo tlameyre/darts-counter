@@ -5,8 +5,9 @@ import AppIcon from '../AppIcon.vue'
 const props = defineProps({
   modelValue: { type: Array, required: true },
   removable:  { type: Boolean, default: false },
+  bot:        { type: Object, default: null },
 })
-const emit = defineEmits(['update:modelValue', 'remove'])
+const emit = defineEmits(['update:modelValue', 'remove', 'edit-bot', 'remove-bot'])
 
 function onModelUpdate(value) {
   emit('update:modelValue', value)
@@ -46,6 +47,21 @@ function avatarLetter(player) {
       </div>
     </template>
   </draggable>
+
+  <div v-if="bot" class="player-order__item">
+    <span class="player-order__position">{{ modelValue.length + 1 }}</span>
+    <div class="player-order__avatar player-order__avatar--bot">
+      <AppIcon name="robot" :width="16" :height="16" />
+    </div>
+    <span class="player-order__name">DartBot</span>
+    <span class="player-order__tag">{{ bot.label }}</span>
+    <button class="player-order__gear" @click="emit('edit-bot')">
+      <AppIcon name="gear" :width="14" :height="14" />
+    </button>
+    <button class="player-order__remove" @click="emit('remove-bot')">
+      <AppIcon name="close" :width="14" :height="14" />
+    </button>
+  </div>
 </template>
 
 <style lang="scss" scoped>
@@ -61,6 +77,7 @@ function avatarLetter(player) {
     padding: $padding-sm $padding-md;
     border-radius: $radius-md;
     background: rgba($white, 0.05);
+    color: $white;
 
     &--me {
       background: rgba($orange, 0.12);
@@ -107,6 +124,10 @@ function avatarLetter(player) {
     &--guest {
       background: rgba($white, 0.15);
     }
+
+    &--bot {
+      background: rgba($white, 0.15);
+    }
   }
 
   &__name {
@@ -124,11 +145,10 @@ function avatarLetter(player) {
     padding: 2px 8px;
   }
 
-  &__remove {
+  &__remove, &__gear {
     color: $muted;
     display: flex;
     align-items: center;
-    padding: $padding-xxs;
 
     &:active { opacity: 0.6; }
   }
@@ -136,7 +156,10 @@ function avatarLetter(player) {
 
 @media (min-width: $bp-laptop) {
   .player-order {
-    &__name { @include text-md; }
+    &__name {
+      @include text-md;
+      font-weight: 600;
+    }
   }
 }
 </style>
