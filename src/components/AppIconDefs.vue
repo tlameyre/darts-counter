@@ -209,6 +209,12 @@
           fill="currentColor" />
       </symbol>
 
+      <symbol id="icon-checkout" viewBox="0 0 512 512" fill="none">
+        <path
+          d="M256 512A256 256 0 1 0 256 0a256 256 0 1 0 0 512zM256 96a160 160 0 1 1 0 320 160 160 0 1 1 0-320zM256 336a80 80 0 1 0 0-160 80 80 0 1 0 0 160zm0-48a32 32 0 1 1 0-64 32 32 0 1 1 0 64z"
+          fill="currentColor" />
+      </symbol>
+
       <symbol id="icon-cricket-closed" viewBox="0 0 24 24" fill="none">
         <circle cx="12" cy="12" r="9" stroke="currentColor" stroke-width="2" />
         <line x1="7" y1="7" x2="17" y2="17" stroke="currentColor" stroke-width="2" stroke-linecap="round" />
