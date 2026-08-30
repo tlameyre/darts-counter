@@ -31,6 +31,15 @@ export const GAME_MODES = [
     settingsRoute: "x01-settings",
   },
   {
+    id: "checkout",
+    title: "CHECKOUTS",
+    description:
+      "Révise et teste les combinaisons de finish, de 2 à 170. Flashcards ou quiz noté sur la cible.",
+    color: "#0891B2",
+    icon: "checkout",
+    settingsRoute: "checkout-settings",
+  },
+  {
     id: "tactics",
     title: "TACTICS",
     description:

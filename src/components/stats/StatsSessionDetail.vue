@@ -4,6 +4,7 @@ import AppIcon from '../AppIcon.vue'
 import X01Result from '../x01/X01Result.vue'
 import GameOver from '../GameOver.vue'
 import WarmupRecap from '../warmup/WarmupRecap.vue'
+import CheckoutRecap from '../checkout/CheckoutRecap.vue'
 
 const props = defineProps({
   show:    { type: Boolean, required: true },
@@ -57,6 +58,18 @@ const x01Stats = computed(() => {
     worstLeg:            s.max_darts != null ? { darts: s.max_darts, checkoutScore: null } : null,
     volleyDistribution:  s.volley_distribution ?? null,
     legAverages:         s.leg_averages        ?? null,
+  }
+})
+
+const checkoutStats = computed(() => {
+  const s = props.session
+  if (!s) return null
+  return {
+    questions: s.questions,
+    correct: s.correct_count,
+    optimal: s.optimal_count,
+    bestStreak: s.best_streak,
+    points: s.points,
   }
 })
 
@@ -114,6 +127,11 @@ function formatDate(iso) {
           :session-stats="warmupSessionStats"
           hide-actions
         />
+      </template>
+
+      <!-- Résultat Checkouts -->
+      <template v-else-if="mode === 'checkout'">
+        <CheckoutRecap variant="quiz" :session-stats="checkoutStats" hide-actions />
       </template>
 
     </div>

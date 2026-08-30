@@ -120,6 +120,17 @@ function openMockTacticsGame({ playerCount = 2 } = {}) {
   router.push({ name: 'tactics-game' })
 }
 
+function openMockCheckoutGame(variant = 'review') {
+  gameStore.gameSettings = {
+    mode: 'checkout',
+    variant,
+    brackets: [[2, 40], [41, 60], [61, 80], [81, 90], [91, 100], [101, 130], [131, 170]],
+    order: variant === 'quiz' ? 'random' : 'asc',
+    count: 10,
+  }
+  router.push({ name: 'checkout-game' })
+}
+
 // --- Preview SvgDartboard ---
 const showDartboardPreview = ref(false)
 const lastDart = ref(null)
@@ -191,6 +202,7 @@ const views = [
   { name: 'friends',        label: 'Amis' },
   { name: 'score-settings', label: 'Réglages Score' },
   { name: 'warmup-settings',label: 'Réglages Warmup' },
+  { name: 'checkout-settings', label: 'Réglages Checkouts' },
   { name: 'x01-settings',  label: 'Réglages 501' },
   { name: 'x01-starter',   label: 'Partie 501 — Qui commence' },
   { name: 'x01-game',      label: 'Partie 501' },
@@ -280,6 +292,15 @@ const mockSent = [
         <button class="dev__btn" @click="openMockTacticsGame({ playerCount: 3 })">Partie Tactics — 3 joueurs</button>
         <button class="dev__btn" @click="openMockTacticsGame({ playerCount: 4 })">Partie Tactics — 4 joueurs</button>
         <button class="dev__btn" @click="openMockTacticsGame({ playerCount: 1 })">Partie Tactics — Solo</button>
+      </div>
+    </section>
+
+    <!-- Checkouts — parties preview -->
+    <section class="dev__section">
+      <h2 class="dev__section-title">Checkouts — preview</h2>
+      <div class="dev__buttons">
+        <button class="dev__btn" @click="openMockCheckoutGame('review')">Checkouts — révision libre</button>
+        <button class="dev__btn" @click="openMockCheckoutGame('quiz')">Checkouts — quiz noté</button>
       </div>
     </section>
 

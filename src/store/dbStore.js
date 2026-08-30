@@ -164,6 +164,63 @@ export const useDbStore = defineStore('db', () => {
     if (error) console.error('[dbStore] deleteTacticsSession:', error.message)
   }
 
+  /**
+   * SQL à exécuter dans Supabase pour créer la table checkout_sessions :
+   *
+   * CREATE TABLE public.checkout_sessions (
+   *   id            uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+   *   user_id       uuid REFERENCES auth.users ON DELETE CASCADE NOT NULL,
+   *   played_at     timestamptz DEFAULT now(),
+   *   questions     int NOT NULL,
+   *   correct_count int NOT NULL,
+   *   optimal_count int NOT NULL DEFAULT 0,
+   *   best_streak   int NOT NULL DEFAULT 0,
+   *   points        int NOT NULL DEFAULT 0,
+   *   settings      jsonb DEFAULT '{}'::jsonb
+   * );
+   * ALTER TABLE public.checkout_sessions ENABLE ROW LEVEL SECURITY;
+   * CREATE POLICY "Users manage own checkout_sessions"
+   *   ON public.checkout_sessions FOR ALL USING (auth.uid() = user_id);
+   */
+  async function saveCheckoutSession({ questions, correctCount, optimalCount, bestStreak, points, settings }) {
+    const user = getUser()
+    if (!user) return null
+    const { data, error } = await supabase.from('checkout_sessions').insert({
+      user_id:       user.id,
+      questions,
+      correct_count: correctCount,
+      optimal_count: optimalCount,
+      best_streak:   bestStreak,
+      points,
+      settings,
+    }).select().single()
+    if (error) {
+      console.error('[dbStore] saveCheckoutSession:', error.message)
+      return null
+    }
+    return data
+  }
+
+  async function fetchCheckoutSessions(limit = 20) {
+    const user = getUser()
+    if (!user) return []
+    const { data, error } = await supabase
+      .from('checkout_sessions')
+      .select('*')
+      .eq('user_id', user.id)
+      .order('played_at', { ascending: false })
+      .limit(limit)
+    if (error) return []
+    return data
+  }
+
+  async function deleteCheckoutSession(id) {
+    const user = getUser()
+    if (!user) return
+    const { error } = await supabase.from('checkout_sessions').delete().eq('id', id).eq('user_id', user.id)
+    if (error) console.error('[dbStore] deleteCheckoutSession:', error.message)
+  }
+
   async function fetchGameSessions(limit = 20) {
     const user = getUser()
     if (!user) return []
@@ -209,16 +266,18 @@ export const useDbStore = defineStore('db', () => {
     const user = getUser()
     if (!user) return null
 
-    const [{ data: gameSessions }, { data: warmupSessions }, { data: x01Sessions }] = await Promise.all([
+    const [{ data: gameSessions }, { data: warmupSessions }, { data: x01Sessions }, { data: checkoutSessions }] = await Promise.all([
       supabase.from('game_sessions').select('id, best_streak, correct_count, total_questions').eq('user_id', user.id),
       supabase.from('warmup_sessions').select('total_darts, accuracy').eq('user_id', user.id),
       supabase.from('x01_sessions').select('total_darts').eq('user_id', user.id),
+      supabase.from('checkout_sessions').select('id').eq('user_id', user.id),
     ])
 
-    const warmupSessionsCount = warmupSessions?.length ?? 0
-    const x01SessionsCount    = x01Sessions?.length ?? 0
-    const gameSessionsCount   = gameSessions?.length ?? 0
-    const totalSessions       = warmupSessionsCount + x01SessionsCount + gameSessionsCount
+    const warmupSessionsCount   = warmupSessions?.length ?? 0
+    const x01SessionsCount      = x01Sessions?.length ?? 0
+    const gameSessionsCount     = gameSessions?.length ?? 0
+    const checkoutSessionsCount = checkoutSessions?.length ?? 0
+    const totalSessions         = warmupSessionsCount + x01SessionsCount + gameSessionsCount + checkoutSessionsCount
 
     const warmupDarts   = warmupSessions?.reduce((s, r) => s + r.total_darts, 0) ?? 0
     const x01Darts      = x01Sessions?.reduce((s, r) => s + (r.total_darts ?? 0), 0) ?? 0
@@ -246,7 +305,7 @@ export const useDbStore = defineStore('db', () => {
       : 0
 
     return {
-      totalSessions, warmupSessionsCount, x01SessionsCount, gameSessionsCount,
+      totalSessions, warmupSessionsCount, x01SessionsCount, gameSessionsCount, checkoutSessionsCount,
       totalDarts, warmupDarts, x01Darts,
       totalQuestions, bestGameAccuracy,
       avgAccuracy, bestAccuracy, bestStreak, totalCorrect, avgAccuracy10, avg80eligible,
@@ -521,9 +580,9 @@ export const useDbStore = defineStore('db', () => {
   }
 
   return {
-    saveGameSession, saveWarmupSession, saveX01Session, saveTacticsSession,
-    deleteGameSession, deleteWarmupSession, deleteX01Session, deleteTacticsSession,
-    fetchGameSessions, fetchWarmupSessions, fetchWarmupSessionsForChart, fetchX01Sessions, fetchTacticsSessions,
+    saveGameSession, saveWarmupSession, saveX01Session, saveTacticsSession, saveCheckoutSession,
+    deleteGameSession, deleteWarmupSession, deleteX01Session, deleteTacticsSession, deleteCheckoutSession,
+    fetchGameSessions, fetchWarmupSessions, fetchWarmupSessionsForChart, fetchX01Sessions, fetchTacticsSessions, fetchCheckoutSessions,
     fetchProfileStats, fetchGlobalStats,
     createTournamentRecord, createTournamentParticipants, createTournamentMatches,
     updateTournamentMatchPointers, fetchTournaments, fetchActiveTournaments, fetchTournamentDetail,

@@ -7,36 +7,41 @@ import AppTabs from '../components/AppTabs.vue'
 import StatsScoreTab from '../components/stats/StatsScoreTab.vue'
 import StatsWarmupTab from '../components/stats/StatsWarmupTab.vue'
 import StatsX01Tab from '../components/stats/StatsX01Tab.vue'
+import StatsCheckoutTab from '../components/stats/StatsCheckoutTab.vue'
 import StatsSessionDetail from '../components/stats/StatsSessionDetail.vue'
 
 const router     = useRouter()
 const dbStore    = useDbStore()
 const badgeStore = useBadgeStore()
 
-const globalStats    = ref(null)
-const gameSessions   = ref([])
-const warmupSessions = ref([])
-const x01Sessions    = ref([])
-const loading        = ref(true)
+const globalStats      = ref(null)
+const gameSessions     = ref([])
+const warmupSessions   = ref([])
+const x01Sessions      = ref([])
+const checkoutSessions = ref([])
+const loading          = ref(true)
 
 onMounted(async () => {
-  const [s, gs, ws, x1] = await Promise.all([
+  const [s, gs, ws, x1, co] = await Promise.all([
     dbStore.fetchGlobalStats(),
     dbStore.fetchGameSessions(10),
     dbStore.fetchWarmupSessions(10),
     dbStore.fetchX01Sessions(10),
+    dbStore.fetchCheckoutSessions(10),
   ])
-  globalStats.value    = s
-  gameSessions.value   = gs
-  warmupSessions.value = ws
-  x01Sessions.value    = x1
-  loading.value        = false
+  globalStats.value      = s
+  gameSessions.value     = gs
+  warmupSessions.value   = ws
+  x01Sessions.value      = x1
+  checkoutSessions.value = co
+  loading.value          = false
 })
 
 const MODES = [
-  { id: 'score',  label: 'Quiz',  color: '#D64A24' },
-  { id: 'warmup', label: 'Echauffement', color: '#1D4ED8' },
-  { id: 'x01',    label: 'x01',    color: '#047857' },
+  { id: 'score',    label: 'Quiz',  color: '#D64A24' },
+  { id: 'warmup',   label: 'Echauffement', color: '#1D4ED8' },
+  { id: 'x01',      label: 'x01',    color: '#047857' },
+  { id: 'checkout', label: 'Checkouts', color: '#0891B2' },
 ]
 const selectedMode = ref('score')
 
@@ -58,6 +63,9 @@ async function deleteSession(id) {
   } else if (selectedMode.value === 'x01') {
     await dbStore.deleteX01Session(id)
     x01Sessions.value = x01Sessions.value.filter(s => s.id !== id)
+  } else if (selectedMode.value === 'checkout') {
+    await dbStore.deleteCheckoutSession(id)
+    checkoutSessions.value = checkoutSessions.value.filter(s => s.id !== id)
   }
   showDetail.value = false
   const [newGlobal, profileStats] = await Promise.all([
@@ -96,6 +104,11 @@ async function deleteSession(id) {
         <StatsX01Tab
           v-else-if="selectedMode === 'x01'"
           :sessions="x01Sessions"
+          @open-detail="openDetail"
+        />
+        <StatsCheckoutTab
+          v-else-if="selectedMode === 'checkout'"
+          :sessions="checkoutSessions"
           @open-detail="openDetail"
         />
       </template>

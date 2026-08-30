@@ -229,6 +229,30 @@ create policy "Users manage own tactics_sessions"
 
 
 -- ============================================================
+-- Sessions Checkouts (quiz de révision des finish, 2→170)
+-- Seul le quiz noté est persisté (la révision libre est du browsing).
+-- ============================================================
+
+create table public.checkout_sessions (
+  id            uuid primary key default gen_random_uuid(),
+  user_id       uuid references auth.users on delete cascade not null,
+  played_at     timestamptz default now(),
+  questions     int not null,
+  correct_count int not null,
+  optimal_count int not null default 0,
+  best_streak   int not null default 0,
+  points        int not null default 0,
+  settings      jsonb default '{}'::jsonb
+);
+
+alter table public.checkout_sessions enable row level security;
+
+create policy "Users manage own checkout_sessions"
+  on public.checkout_sessions for all
+  using (auth.uid() = user_id);
+
+
+-- ============================================================
 -- Mode Tournoi (format Bracket) — V2 : hôtes, invitation par code,
 -- flow création (pending) → démarrage (in_progress)
 -- ============================================================
