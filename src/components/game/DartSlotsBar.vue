@@ -9,6 +9,7 @@ const props = defineProps({
   value:      { type: String,  default: '' },        // saisie en cours (mode volée)
   bust:       { type: Boolean, default: false },
   toggleable: { type: Boolean, default: false },
+  modes:      { type: Array,   default: () => ['dart', 'board', 'volley'] },
 })
 
 const emit = defineEmits(['select', 'validate'])
@@ -18,6 +19,8 @@ const MODE_OPTIONS = [
   { id: 'board',  icon: 'dartboard', label: 'Cible' },
   { id: 'volley', icon: 'dialpad',  label: 'Volée' },
 ]
+
+const options = computed(() => MODE_OPTIONS.filter(o => props.modes.includes(o.id)))
 
 const currentIcon = computed(() => MODE_OPTIONS.find(o => o.id === props.mode)?.icon ?? 'numpad')
 
@@ -75,7 +78,7 @@ function selectMode(id) {
     <div v-if="isOpen" class="dart-bar__popover-backdrop" @click="isOpen = false" />
     <div v-if="isOpen" class="dart-bar__popover">
       <button
-        v-for="option in MODE_OPTIONS"
+        v-for="option in options"
         :key="option.id"
         class="dart-bar__popover-option"
         :class="{ 'dart-bar__popover-option--active': option.id === mode }"

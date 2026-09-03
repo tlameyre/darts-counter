@@ -162,7 +162,6 @@ function grade(known) {
 
     <div class="deck__actions">
       <template v-if="revealed">
-        <p class="deck__ask">Tu connaissais&nbsp;?</p>
         <div class="deck__grades">
           <button class="deck__grade deck__grade--again" @click="grade(false)">
             <AppIcon name="undo" :width="18" :height="18" /> À revoir
@@ -242,6 +241,7 @@ function grade(known) {
       justify-content: flex-start;
       gap: $gap-md;
       overflow: hidden;
+      padding-bottom: 0;
     }
 
     &--hidden {
@@ -309,6 +309,7 @@ function grade(known) {
     flex: 1;
     min-height: 0;
     overflow-y: auto;
+    padding-bottom: $padding-lg;
   }
 
   &__actions {
