@@ -152,6 +152,10 @@ const badgeW = (label) => 34 + Math.max(0, label.length - 1) * 7
   aspect-ratio: 1;
 }
 
+@media (min-width: $bp-laptop) {
+  .board { max-width: 340px; }
+}
+
 .board__bg { fill: $dart-black; }
 
 .board__zone {

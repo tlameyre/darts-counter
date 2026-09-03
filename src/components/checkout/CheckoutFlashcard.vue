@@ -148,15 +148,17 @@ function grade(known) {
         <button type="button" class="deck__board-btn" @click="emit('toggle')">
           <CheckoutBoardRoute :route="selectedRoute || []" class="deck__board" />
         </button>
-        <div class="deck__value">{{ score }}</div>
-        <CheckoutRouteCard
-          :checkout="checkout"
-          size="md"
-          selectable
-          :selected="selectedRoute"
-          class="deck__routes"
-          @select="selectedRoute = $event"
-        />
+        <div class="deck__detail">
+          <div class="deck__value">{{ score }}</div>
+          <CheckoutRouteCard
+            :checkout="checkout"
+            size="md"
+            selectable
+            :selected="selectedRoute"
+            class="deck__routes"
+            @select="selectedRoute = $event"
+          />
+        </div>
       </div>
     </div>
 
@@ -295,6 +297,16 @@ function grade(known) {
     flex-shrink: 0;
   }
 
+  &__detail {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: $gap-md;
+    flex: 1;
+    min-height: 0;
+    width: 100%;
+  }
+
   &__value {
     @include display-sm;
     color: $white;
@@ -370,8 +382,33 @@ function grade(known) {
   .deck {
     &__counter { @include text-sm; }
     &__hint { @include text-md; }
-    &__routes { max-width: 560px; }
     &__reveal, &__grade { height: 52px; @include title-md; }
+
+    // Verso : cible à gauche, finish + routes à droite
+    &__face--back {
+      flex-direction: row;
+      align-items: stretch;
+      gap: $gap-xl;
+      padding: $padding-xl;
+    }
+
+    &__board-btn {
+      flex: 1;
+      min-width: 0;
+      width: auto;
+      align-items: center;
+    }
+
+    &__detail {
+      flex: 1;
+      min-width: 0;
+      align-items: stretch;
+      gap: $gap-lg;
+    }
+
+    &__value { text-align: left; }
+
+    &__routes { max-width: none; }
   }
 }
 </style>
