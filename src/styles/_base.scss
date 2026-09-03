@@ -24,12 +24,6 @@ body {
   font-family: $font-text;
   min-height: 100dvh;
   overflow-x: hidden;
-
-  // viewport-fit=cover : le contenu passe sous la barre d'état / l'encoche iOS.
-  // On réserve les safe-areas globalement (le bas est géré par BottomNav / modales).
-  padding-top: env(safe-area-inset-top);
-  padding-left: env(safe-area-inset-left);
-  padding-right: env(safe-area-inset-right);
 }
 
 // --- Transitions ---
