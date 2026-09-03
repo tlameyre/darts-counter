@@ -1,10 +1,30 @@
 <script setup>
-import { computed } from 'vue'
+import { ref, computed } from 'vue'
 import AppButton from '../AppButton.vue'
 import AppIcon from '../AppIcon.vue'
 import SvgDartboard from '../x01/SvgDartboard.vue'
+import SectorGrid from '../game/SectorGrid.vue'
 import DartSlotsBar from '../game/DartSlotsBar.vue'
 import CheckoutRouteCard from './CheckoutRouteCard.vue'
+
+const INPUT_KEY = 'checkout-quiz-input'
+const inputMode = ref(
+  (() => {
+    try {
+      return localStorage.getItem(INPUT_KEY) === 'dart' ? 'dart' : 'board'
+    } catch {
+      return 'board'
+    }
+  })(),
+)
+function setInputMode(m) {
+  inputMode.value = m
+  try {
+    localStorage.setItem(INPUT_KEY, m)
+  } catch {
+    /* stockage indisponible */
+  }
+}
 
 const props = defineProps({
   score: { type: Number, default: null },
@@ -38,14 +58,29 @@ const banner = computed(() => {
       <span class="quiz__counter">{{ counter }}</span>
       <span class="quiz__target">Reste <strong>{{ score }}</strong></span>
       <span class="quiz__remaining" :class="{ 'quiz__remaining--done': remaining === 0 }">
-        {{ answered ? '—' : remaining }}
       </span>
     </div>
 
-    <DartSlotsBar mode="board" :darts="attemptDarts" value-key="label" />
+    <DartSlotsBar
+      :mode="inputMode"
+      :modes="['board', 'dart']"
+      :toggleable="!answered"
+      :darts="attemptDarts"
+      value-key="label"
+      @select="setInputMode"
+    />
 
-    <div class="quiz__board">
-      <SvgDartboard :locked="answered || attemptDarts.length >= 3" @dart="emit('dart', $event)" />
+    <div v-if="!answered" class="quiz__board" :class="{ 'quiz__board--grid': inputMode === 'dart' }">
+      <SectorGrid
+        v-if="inputMode === 'dart'"
+        :locked="attemptDarts.length >= 3"
+        @dart="emit('dart', $event)"
+      />
+      <SvgDartboard
+        v-else
+        :locked="attemptDarts.length >= 3"
+        @dart="emit('dart', $event)"
+      />
     </div>
 
     <template v-if="!answered">
@@ -112,6 +147,12 @@ const banner = computed(() => {
     display: flex;
     justify-content: center;
     padding: $padding-xs 0;
+
+    &--grid {
+      padding: 0;
+      height: 340px;
+      flex-shrink: 0;
+    }
   }
 
   &__actions {
