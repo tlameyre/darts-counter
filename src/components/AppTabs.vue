@@ -1,23 +1,29 @@
 <script setup>
 defineProps({
   // [{ id, label, color? }]
-  tabs:       { type: Array,  required: true },
-  modelValue: { type: String, required: true },
-  variant:    { type: String, default: 'pill' }, // 'pill' | 'underline'
+  tabs:       { type: Array,   required: true },
+  modelValue: { type: String,  required: true },
+  variant:    { type: String,  default: 'pill' }, // 'pill' | 'underline'
+  scrollable: { type: Boolean, default: false },  // défile horizontalement + snap
 })
 
-defineEmits(['update:modelValue'])
+const emit = defineEmits(['update:modelValue'])
+
+function select(tab, e) {
+  emit('update:modelValue', tab.id)
+  e.currentTarget.scrollIntoView({ inline: 'center', block: 'nearest', behavior: 'smooth' })
+}
 </script>
 
 <template>
-  <div class="app-tabs" :class="`app-tabs--${variant}`">
+  <div class="app-tabs" :class="[`app-tabs--${variant}`, { 'app-tabs--scrollable': scrollable }]">
     <button
       v-for="tab in tabs"
       :key="tab.id"
       class="app-tabs__tab"
       :class="{ 'app-tabs__tab--active': modelValue === tab.id }"
       :style="modelValue === tab.id && tab.color ? { '--tab-color': tab.color } : {}"
-      @click="$emit('update:modelValue', tab.id)"
+      @click="select(tab, $event)"
     >
       <slot :name="tab.id">{{ tab.label }}</slot>
     </button>
@@ -50,6 +56,23 @@ defineEmits(['update:modelValue'])
         background: var(--tab-color, $orange);
         color: $white;
       }
+    }
+  }
+
+  // ── Scrollable + snap (combine avec --pill) ───────────────────────────────
+  &--scrollable {
+    overflow-x: auto;
+    scroll-snap-type: x mandatory;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+
+    &::-webkit-scrollbar { display: none; }
+
+    .app-tabs__tab {
+      flex: 1 0 auto;
+      min-width: max-content;
+      white-space: nowrap;
+      scroll-snap-align: center;
     }
   }
 

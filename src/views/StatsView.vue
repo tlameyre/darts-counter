@@ -81,7 +81,7 @@ async function deleteSession(id) {
   <div class="stats">
     <header class="stats__header">
       <h1 class="stats__title">STATISTIQUES</h1>
-      <AppTabs :tabs="MODES" v-model="selectedMode" />
+      <AppTabs :tabs="MODES" v-model="selectedMode" scrollable />
     </header>
 
     <main class="stats__main">
@@ -151,7 +151,7 @@ async function deleteSession(id) {
     flex-direction: column;
     gap: $gap-md;
     overflow: hidden;
-    padding-bottom: calc($padding-xxl + 64px);
+    @include nav-safe-bottom;
   }
 
   &__empty {
@@ -168,7 +168,7 @@ async function deleteSession(id) {
 
     &__header { gap: $gap-lg; padding-top: $padding-xl; padding-bottom: $padding-xl; }
     &__title  { @include title-xxl; }
-    &__main   { gap: $gap-lg; padding-bottom: calc($padding-xxl + 64px); }
+    &__main   { gap: $gap-lg; @include nav-safe-bottom; }
     &__empty  { @include text-md; }
   }
 }
