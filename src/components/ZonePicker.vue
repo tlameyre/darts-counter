@@ -118,13 +118,15 @@ function activeType() {
     border-radius: $radius-sm;
     overflow: hidden;
     border: $border-md solid $white;
-    flex: 1;
+    flex: 0 0 auto;
   }
 
   &__cell {
     display: flex;
     align-items: center;
     justify-content: center;
+    min-width: 0;
+    aspect-ratio: 1;
     @include title-xl;
     background: $bg;
     color: $white;
@@ -146,7 +148,7 @@ function activeType() {
 
     &--bull {
       grid-column: 1 / -1;
-      aspect-ratio: unset;
+      aspect-ratio: auto;
       padding: $padding-sm;
       @include title-lg;
       border-right: none;
@@ -166,19 +168,12 @@ function activeType() {
 
 @media (min-width: $bp-tablet) {
   .zone-picker {
-    flex: 1;
-
-    &__grid {
-      flex: 1;
-    }
-
     &__cell {
       @include title-xxl;
-      aspect-ratio: inherit
     }
 
     &__cell--bull {
-      padding: 0;
+      padding: $padding-md;
       @include title-xl;
     }
   }
