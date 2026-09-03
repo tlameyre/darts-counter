@@ -406,7 +406,7 @@ function grade(known) {
       gap: $gap-lg;
     }
 
-    &__value { text-align: left; }
+    &__value { text-align: center; }
 
     &__routes { max-width: none; }
   }

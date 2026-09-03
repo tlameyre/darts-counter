@@ -147,13 +147,13 @@ const badgeW = (label) => 34 + Math.max(0, label.length - 1) * 7
 .board {
   display: block;
   width: 100%;
-  max-width: 264px;
+  max-width: 300px;
   margin: 0 auto;
   aspect-ratio: 1;
 }
 
 @media (min-width: $bp-laptop) {
-  .board { max-width: 340px; }
+  .board { max-width: 440px; }
 }
 
 .board__bg { fill: $dart-black; }

@@ -63,14 +63,14 @@ function rowClass(row, i) {
 
   &__row {
     display: flex;
+    flex-direction: column;
     align-items: center;
-    gap: $gap-sm;
+    gap: $gap-xs;
     width: 100%;
     background: rgba($white, 0.05);
     border: $border-sm solid transparent;
     border-radius: $radius-md;
     padding: $padding-sm;
-    text-align: left;
     transition: border-color 0.15s, background 0.15s;
 
     &--strong {
@@ -91,18 +91,18 @@ function rowClass(row, i) {
   }
 
   &__tag {
+    align-self: flex-start;
     @include text-xs;
-    color: rgba($white, 0.8);
+    color: $muted;
     text-transform: uppercase;
     letter-spacing: 0.04em;
-    flex-shrink: 0;
-    width: 5.5rem;
   }
 
   &__darts {
     display: flex;
     flex-wrap: wrap;
     align-items: center;
+    justify-content: center;
     gap: $gap-xxs;
   }
 
@@ -121,7 +121,7 @@ function rowClass(row, i) {
 
 @media (min-width: $bp-laptop) {
   .route-card {
-    &__tag { @include text-sm; width: 7rem; }
+    &__tag { @include text-sm; }
     &__leaves { @include text-sm; }
   }
 }
