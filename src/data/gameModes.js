@@ -1,6 +1,7 @@
 /**
  * Définition des modes de jeu.
  * Pour ajouter un mode : ajouter un objet ici + les routes dans router/index.js
+ * `group` : "train" (s'entraîner) ou "play" (jouer) — sert au regroupement du lobby.
  */
 export const GAME_MODES = [
   {
@@ -11,24 +12,7 @@ export const GAME_MODES = [
     color: "#EB6343",
     icon: "calculator",
     settingsRoute: "score-settings",
-  },
-  {
-    id: "warmup",
-    title: "ECHAUFFEMENT",
-    description:
-      "Travaille une zone de la cible sur une durée définie et suis ta précision.",
-    color: "#1D4ED8",
-    icon: "dartboard",
-    settingsRoute: "warmup-settings",
-  },
-  {
-    id: "x01",
-    title: "501",
-    description:
-      "Descends de 501 (ou 301) à 0 en comptant tes volées. Analyse tes moyennes et tes checkouts.",
-    color: "#047857",
-    icon: "dartboard",
-    settingsRoute: "x01-settings",
+    group: "train",
   },
   {
     id: "checkout",
@@ -38,6 +22,27 @@ export const GAME_MODES = [
     color: "#0891B2",
     icon: "checkout",
     settingsRoute: "checkout-settings",
+    group: "train",
+  },
+  {
+    id: "warmup",
+    title: "ECHAUFFEMENT",
+    description:
+      "Travaille une zone de la cible sur une durée définie et suis ta précision.",
+    color: "#1D4ED8",
+    icon: "dartboard",
+    settingsRoute: "warmup-settings",
+    group: "play",
+  },
+  {
+    id: "x01",
+    title: "501",
+    description:
+      "Descends de 501 (ou 301) à 0 en comptant tes volées. Analyse tes moyennes et tes checkouts.",
+    color: "#047857",
+    icon: "dartboard",
+    settingsRoute: "x01-settings",
+    group: "play",
   },
   {
     id: "tactics",
@@ -47,6 +52,7 @@ export const GAME_MODES = [
     color: "#DC2626",
     icon: "cricket-closed",
     settingsRoute: "tactics-settings",
+    group: "play",
   },
   {
     id: "tournament",
@@ -56,5 +62,6 @@ export const GAME_MODES = [
     color: "#7C3AED",
     icon: "trophy",
     settingsRoute: "tournaments",
+    group: "play",
   },
 ];

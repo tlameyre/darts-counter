@@ -1,4 +1,5 @@
 <script setup>
+import { computed } from 'vue'
 import { useRouter } from 'vue-router'
 import { GAME_MODES } from '../data/gameModes.js'
 import { useAuthStore } from '../store/authStore.js'
@@ -6,6 +7,9 @@ import AppIcon from '../components/AppIcon.vue'
 
 const router    = useRouter()
 const authStore = useAuthStore()
+
+const trainModes = computed(() => GAME_MODES.filter((m) => m.group === 'train'))
+const playModes  = computed(() => GAME_MODES.filter((m) => m.group !== 'train'))
 
 function selectMode(mode) {
   router.push({ name: mode.settingsRoute })
@@ -24,12 +28,33 @@ function selectMode(mode) {
       </div>
     </header>
 
-    <main class="lobby__modes">
-      <button v-for="mode in GAME_MODES" :key="mode.id" class="mode-card" :style="{ '--mode-color': mode.color }"
-        @click="selectMode(mode)">
-        <h2 class="mode-card__title">{{ mode.title }}</h2>
-        <p class="mode-card__desc">{{ mode.description }}</p>
-      </button>
+    <main class="lobby__main">
+      <section class="lobby__group">
+        <h2 class="lobby__group-title">S'entraîner</h2>
+        <div class="lobby__modes">
+          <button v-for="mode in trainModes" :key="mode.id" class="mode-card" :style="{ '--mode-color': mode.color }"
+            @click="selectMode(mode)">
+            <h3 class="mode-card__title">{{ mode.title }}</h3>
+            <p class="mode-card__desc">{{ mode.description }}</p>
+          </button>
+
+          <button class="lobby__wiki-card" @click="router.push({ name: 'checkout-wiki' })">
+            <span class="lobby__wiki-title">CONSULTER LES CHECKOUTS</span>
+            <span class="lobby__wiki-desc">Parcours toutes les sorties de 2 à 170 sans lancer de partie.</span>
+          </button>
+        </div>
+      </section>
+
+      <section class="lobby__group">
+        <h2 class="lobby__group-title">Jouer</h2>
+        <div class="lobby__modes">
+          <button v-for="mode in playModes" :key="mode.id" class="mode-card" :style="{ '--mode-color': mode.color }"
+            @click="selectMode(mode)">
+            <h3 class="mode-card__title">{{ mode.title }}</h3>
+            <p class="mode-card__desc">{{ mode.description }}</p>
+          </button>
+        </div>
+      </section>
     </main>
   </div>
 </template>
@@ -40,8 +65,9 @@ function selectMode(mode) {
   flex-direction: column;
   min-height: 100dvh;
   margin: 0 auto;
-  padding: $padding-lg $padding-md calc($padding-xxl + 64px);
+  padding: $padding-lg $padding-md 0;
   gap: $padding-xl;
+  @include nav-safe-bottom;
 
   &__header-top {
     padding-top: $padding-lg;
@@ -83,11 +109,58 @@ function selectMode(mode) {
     line-height: .9;
   }
 
+  &__main {
+    display: flex;
+    flex-direction: column;
+    gap: $padding-xl;
+    flex: 1;
+  }
+
+  &__group {
+    display: flex;
+    flex-direction: column;
+    gap: $padding-sm;
+  }
+
+  &__group-title {
+    @include title-sm;
+    color: $muted;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+  }
+
   &__modes {
     display: flex;
     flex-direction: column;
     gap: $padding-sm;
-    flex: 1;
+  }
+
+  &__wiki-card {
+    display: flex;
+    flex-direction: column;
+    gap: $gap-xxs;
+    width: 100%;
+    background: rgba($white, 0.05);
+    border: $border-sm solid rgba($white, 0.08);
+    border-radius: $radius-lg;
+    padding: $padding-lg;
+    text-align: left;
+    transition: transform 0.15s, opacity 0.15s;
+
+    &:active {
+      transform: scale(0.98);
+      opacity: 0.9;
+    }
+  }
+
+  &__wiki-title {
+    @include title-sm;
+    color: $white;
+  }
+
+  &__wiki-desc {
+    @include text-xs;
+    color: $muted;
   }
 }
 
@@ -121,13 +194,17 @@ function selectMode(mode) {
 
 @media (min-width: $bp-laptop) {
   .lobby {
-    padding: $padding-xxl;
+    padding: $padding-xxl $padding-xxl 0;
+    @include nav-safe-bottom($padding-xl);
 
     &__title {
       @include title-xxxl;
     }
 
     &__profile-name { @include text-md; }
+    &__group-title { @include title-md; }
+    &__wiki-title { @include title-md; }
+    &__wiki-desc { @include text-sm; }
 
     .mode-card {
       gap: $gap-lg;

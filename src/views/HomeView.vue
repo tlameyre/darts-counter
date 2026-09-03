@@ -35,6 +35,9 @@ const initials = computed(() => {
   }
   return (p.username?.[0] ?? authStore.user?.email?.[0] ?? '?').toUpperCase()
 })
+
+const trainModes = computed(() => GAME_MODES.filter((m) => m.group === 'train'))
+const playModes  = computed(() => GAME_MODES.filter((m) => m.group !== 'train'))
 </script>
 
 <template>
@@ -51,15 +54,31 @@ const initials = computed(() => {
 
     <main class="home__main">
 
-      <!-- Raccourcis modes de jeu -->
+      <!-- Raccourcis : s'entraîner -->
+      <section class="home__section">
+        <h2 class="home__section-title">S'entraîner</h2>
+        <div class="home__modes">
+          <button v-for="mode in trainModes" :key="mode.id" class="home__mode-card"
+            :style="{ '--mode-color': mode.color }" @click="router.push({ name: mode.settingsRoute })">
+            <AppIcon :name="mode.icon" :width="24" :height="24" class="home__mode-icon" />
+            <span class="home__mode-label">{{ mode.title.replace('\n', ' ') }}</span>
+          </button>
+
+          <button class="home__mode-card home__mode-card--ghost" @click="router.push({ name: 'checkout-wiki' })">
+            <AppIcon name="book" :width="24" :height="24" class="home__mode-icon" />
+            <span class="home__mode-label">Checkouts — consulter</span>
+          </button>
+        </div>
+      </section>
+
+      <!-- Raccourcis : jouer -->
       <section class="home__section">
         <h2 class="home__section-title">Jouer</h2>
         <div class="home__modes">
-          <button v-for="mode in GAME_MODES" :key="mode.id" class="home__mode-card"
+          <button v-for="mode in playModes" :key="mode.id" class="home__mode-card"
             :style="{ '--mode-color': mode.color }" @click="router.push({ name: mode.settingsRoute })">
-            <AppIcon :name="mode.icon" :width="22" :height="22" class="home__mode-icon" />
+            <AppIcon :name="mode.icon" :width="24" :height="24" class="home__mode-icon" />
             <span class="home__mode-label">{{ mode.title.replace('\n', ' ') }}</span>
-            <AppIcon name="arrow-left" :width="14" :height="14" class="home__mode-arrow" />
           </button>
         </div>
       </section>
@@ -87,8 +106,9 @@ const initials = computed(() => {
   display: flex;
   flex-direction: column;
   min-height: 100dvh;
-  padding: $padding-lg $padding-md calc($padding-xxl + 64px);
+  padding: $padding-lg $padding-md 0;
   gap: $padding-xl;
+  @include nav-safe-bottom;
 
   &__header {
     padding-top: $padding-lg;
@@ -165,15 +185,17 @@ const initials = computed(() => {
 
   // --- Modes ---
   &__modes {
-    display: flex;
-    flex-direction: column;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
     gap: $gap-sm;
   }
 
   &__mode-card {
     display: flex;
-    align-items: center;
+    flex-direction: column;
+    align-items: flex-start;
     gap: $gap-sm;
+    min-height: 96px;
     background: var(--mode-color);
     border-radius: $radius-md;
     padding: $padding-md;
@@ -182,6 +204,15 @@ const initials = computed(() => {
 
     &:active {
       opacity: 0.8;
+    }
+
+    &--ghost {
+      grid-column: 1 / -1;
+      flex-direction: row;
+      align-items: center;
+      min-height: 0;
+      background: rgba($white, 0.05);
+      border: $border-sm solid rgba($white, 0.08);
     }
   }
 
@@ -193,22 +224,16 @@ const initials = computed(() => {
   &__mode-label {
     @include title-sm;
     color: $white;
-    flex: 1;
     text-align: left;
-  }
-
-  &__mode-arrow {
-    color: rgba(255, 255, 255, 0.6);
-    transform: rotate(180deg);
-    flex-shrink: 0;
   }
 
 }
 
 @media (min-width: $bp-laptop) {
   .home {
-    padding: $padding-xxl;
+    padding: $padding-xxl $padding-xxl 0;
     gap: $padding-xxl;
+    @include nav-safe-bottom($padding-xl);
 
     &__header {
       padding-top: 0;
@@ -238,6 +263,7 @@ const initials = computed(() => {
 
     &__mode-card {
       gap: $gap-md;
+      min-height: 120px;
       padding: $padding-xl;
     }
 
