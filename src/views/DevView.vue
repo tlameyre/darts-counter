@@ -203,6 +203,8 @@ const views = [
   { name: 'score-settings', label: 'Réglages Score' },
   { name: 'warmup-settings',label: 'Réglages Warmup' },
   { name: 'checkout-settings', label: 'Réglages Checkouts' },
+  { name: 'checkout-wiki', label: 'Wiki Checkouts' },
+  { name: 'checkout-wiki-detail', label: 'Wiki Checkout — Détail', params: { score: 170 } },
   { name: 'x01-settings',  label: 'Réglages 501' },
   { name: 'x01-starter',   label: 'Partie 501 — Qui commence' },
   { name: 'x01-game',      label: 'Partie 501' },
@@ -257,7 +259,7 @@ const mockSent = [
           v-for="v in views"
           :key="v.name"
           class="dev__btn"
-          @click="router.push({ name: v.name })"
+          @click="router.push({ name: v.name, params: v.params })"
         >
           {{ v.label }}
         </button>

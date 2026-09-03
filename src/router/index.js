@@ -19,6 +19,8 @@ import X01StarterOrderView from "../views/X01StarterOrderView.vue";
 import X01GameView from "../views/X01GameView.vue";
 import CheckoutSettingsView from "../views/CheckoutSettingsView.vue";
 import CheckoutGameView from "../views/CheckoutGameView.vue";
+import CheckoutWikiView from "../views/CheckoutWikiView.vue";
+import CheckoutWikiDetailView from "../views/CheckoutWikiDetailView.vue";
 import TacticsSettingsView from "../views/TacticsSettingsView.vue";
 import TacticsStarterOrderView from "../views/TacticsStarterOrderView.vue";
 import TacticsGameView from "../views/TacticsGameView.vue";
@@ -82,6 +84,13 @@ const routes = [
     meta: { hideNav: true },
   },
   { path: "/checkouts", name: "checkout-settings", component: CheckoutSettingsView },
+  { path: "/checkouts/wiki", name: "checkout-wiki", component: CheckoutWikiView },
+  {
+    path: "/checkouts/wiki/:score",
+    name: "checkout-wiki-detail",
+    component: CheckoutWikiDetailView,
+    meta: { hideNav: true },
+  },
   {
     path: "/checkouts/play",
     name: "checkout-game",
@@ -121,6 +130,9 @@ if (import.meta.env.DEV) {
 export const router = createRouter({
   history: createWebHistory("/darts-trainer/"),
   routes,
+  scrollBehavior(to, from, savedPosition) {
+    return savedPosition || { top: 0 };
+  },
 });
 
 router.beforeEach(async (to) => {

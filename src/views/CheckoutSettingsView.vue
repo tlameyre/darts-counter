@@ -3,6 +3,7 @@ import { reactive, ref, computed } from 'vue'
 import { useRouter } from 'vue-router'
 import AppHeader from '../components/AppHeader.vue'
 import AppButton from '../components/AppButton.vue'
+import AppIcon from '../components/AppIcon.vue'
 import { useGameStore } from '../store/gameStore.js'
 import { CHECKOUT_BRACKETS, CHECKOUT_DATA_SOURCE } from '../composables/useCheckouts.js'
 
@@ -67,7 +68,14 @@ function startGame() {
 
 <template>
   <div class="settings">
-    <AppHeader title="CHECKOUTS" @back="router.push({ name: 'home' })" />
+    <AppHeader title="CHECKOUTS" @back="router.push({ name: 'home' })">
+      <template #right>
+        <button type="button" class="settings__wiki-btn" aria-label="Consulter les checkouts"
+          @click="router.push({ name: 'checkout-wiki' })">
+          <AppIcon name="book" :width="22" :height="22" />
+        </button>
+      </template>
+    </AppHeader>
 
     <main class="settings__main">
       <div class="settings__card">
@@ -125,8 +133,9 @@ function startGame() {
   display: flex;
   flex-direction: column;
   min-height: 100dvh;
-  padding: $padding-md $padding-md calc($padding-xl + 69px);
+  padding: $padding-md $padding-md 0;
   gap: $gap-xl;
+  @include nav-safe-bottom;
 
   &__main {
     flex: 1;
@@ -188,6 +197,17 @@ function startGame() {
     white-space: nowrap;
   }
 
+  &__wiki-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: $text-color;
+    padding: $padding-xxs;
+    transition: opacity 0.15s;
+
+    &:active { opacity: 0.6; }
+  }
+
   &__source {
     @include text-xs;
     color: $muted;
@@ -198,7 +218,8 @@ function startGame() {
 
 @media (min-width: $bp-tablet) {
   .settings {
-    padding: $padding-xl $padding-xl calc($padding-xl + 69px);
+    padding: $padding-xl $padding-xl 0;
+    @include nav-safe-bottom($padding-xl);
 
     &__section-label { @include title-xl; }
   }

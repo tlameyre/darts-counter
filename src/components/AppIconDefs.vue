@@ -215,6 +215,12 @@
           fill="currentColor" />
       </symbol>
 
+      <symbol id="icon-book" viewBox="0 0 448 512" fill="none">
+        <path
+          d="M96 0C43 0 0 43 0 96L0 416c0 53 43 96 96 96l320 0c17.7 0 32-14.3 32-32s-14.3-32-32-32l0-67.6c18.6-13.9 32-36.3 32-60.4l0-224c0-53-43-96-96-96L96 0zM64 416c0-17.7 14.3-32 32-32l288 0 0 64L96 448c-17.7 0-32-14.3-32-32zM128 120c0-13.3 10.7-24 24-24l176 0c13.3 0 24 10.7 24 24s-10.7 24-24 24l-176 0c-13.3 0-24-10.7-24-24zm24 72l176 0c13.3 0 24 10.7 24 24s-10.7 24-24 24l-176 0c-13.3 0-24-10.7-24-24s10.7-24 24-24z"
+          fill="currentColor" />
+      </symbol>
+
       <symbol id="icon-cricket-closed" viewBox="0 0 24 24" fill="none">
         <circle cx="12" cy="12" r="9" stroke="currentColor" stroke-width="2" />
         <line x1="7" y1="7" x2="17" y2="17" stroke="currentColor" stroke-width="2" stroke-linecap="round" />
