@@ -336,8 +336,9 @@ const zoneSummaries = computed(() => selectedZones.value.map(key => {
   display: flex;
   flex-direction: column;
   min-height: 100dvh;
-  padding: $padding-lg $padding-md calc($padding-xxl + 64px);
+  padding: $padding-lg $padding-md 0;
   gap: $gap-md;
+  @include nav-safe-bottom;
 
   &__main {
     display: flex;
@@ -479,7 +480,8 @@ const zoneSummaries = computed(() => selectedZones.value.map(key => {
 
 @media (min-width: $bp-laptop) {
   .warmup-detail {
-    padding: $padding-xxl;
+    padding: $padding-xxl $padding-xxl 0;
+    @include nav-safe-bottom($padding-xl);
 
     &__month-select { @include text-md; }
     &__zone-row-label { @include text-sm; }

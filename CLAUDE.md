@@ -100,19 +100,26 @@ Le responsive est **mobile-first** : styles de base pour mobile, overrides dans 
 
 Toutes les vues pleine page suivent ce patron (inspiré de `LobbyView`) :
 
+Le bas de page des vues avec BottomNav se réserve **toujours** via le mixin
+`nav-safe-bottom($extra)` (défini dans `_variables.scss`) — il ajoute la hauteur
+réelle de la nav (`$bottom-nav-height`) + `env(safe-area-inset-bottom)`. Ne jamais
+coder en dur `calc($padding-xxl + 64px)`.
+
 ```scss
 .ma-vue {
   display: flex;
   flex-direction: column;
   min-height: 100dvh;
   margin: 0 auto;
-  padding: $padding-lg $padding-md calc($padding-xxl + 64px); // 64px = hauteur BottomNav
+  padding: $padding-lg $padding-md 0;
   gap: $gap-md; // ou $gap-lg selon le contenu
+  @include nav-safe-bottom; // $extra par défaut = $padding-xxl
 }
 
 @media (min-width: $bp-laptop) {
   .ma-vue {
-    padding: $padding-xxl; // padding uniforme sur grand écran
+    padding: $padding-xxl $padding-xxl 0; // padding uniforme sur grand écran
+    @include nav-safe-bottom($padding-xl);
 
     // Monter d'un niveau tous les mixins de typo présents dans la vue :
     // text-sm → text-md, title-sm → title-md, title-md → title-lg, etc.

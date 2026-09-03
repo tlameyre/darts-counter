@@ -157,7 +157,7 @@ async function onSignOut() {
     display: flex;
     flex-direction: column;
     gap: $gap-lg;
-    padding-bottom: calc($padding-xxl + 64px);
+    @include nav-safe-bottom;
   }
 
   &__hero {

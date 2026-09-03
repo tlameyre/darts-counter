@@ -103,3 +103,12 @@ $bp-mobile: 480px;
 $bp-tablet: 768px;
 $bp-laptop: 1025px;
 $bp-desktop: 1280px;
+
+// Bottom navigation (fixe) — hauteur réelle rendue
+$bottom-nav-height: 69px;
+
+// Réserve en bas d'une vue l'espace de la BottomNav + la safe-area iOS.
+// `$extra` = marge visible souhaitée entre le dernier contenu et la nav.
+@mixin nav-safe-bottom($extra: $padding-xxl) {
+  padding-bottom: calc(#{$extra} + #{$bottom-nav-height} + env(safe-area-inset-bottom));
+}

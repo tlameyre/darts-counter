@@ -253,8 +253,9 @@ const tabs = [
   flex-direction: column;
   min-height: 100dvh;
   margin: 0 auto;
-  padding: $padding-lg $padding-md calc($padding-xxl + 64px);
+  padding: $padding-lg $padding-md 0;
   gap: $gap-md;
+  @include nav-safe-bottom;
 
   &__my-code {
     display: flex;
@@ -372,7 +373,8 @@ const tabs = [
 
 @media (min-width: $bp-laptop) {
   .friends {
-    padding: $padding-xxl;
+    padding: $padding-xxl $padding-xxl 0;
+    @include nav-safe-bottom($padding-xl);
 
     &__section-title { @include text-sm; }
     &__empty       { @include text-md; }

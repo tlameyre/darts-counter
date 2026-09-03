@@ -146,8 +146,9 @@ async function createTournament() {
   display: flex;
   flex-direction: column;
   min-height: 100dvh;
-  padding: $padding-md $padding-md calc($padding-xxl + 69px);
+  padding: $padding-md $padding-md 0;
   gap: $gap-xl;
+  @include nav-safe-bottom;
 
   &__main {
     flex: 1;
@@ -296,7 +297,8 @@ async function createTournament() {
 
 @media (min-width: $bp-tablet) {
   .settings {
-    padding: $padding-xl $padding-xl calc($padding-xl + 69px);
+    padding: $padding-xl $padding-xl 0;
+    @include nav-safe-bottom($padding-xl);
 
     &__section-label     { @include title-xl; }
     &__name-input         { @include text-lg; }

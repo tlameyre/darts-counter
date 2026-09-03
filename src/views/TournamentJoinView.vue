@@ -80,8 +80,9 @@ async function join() {
   display: flex;
   flex-direction: column;
   min-height: 100dvh;
-  padding: $padding-md $padding-md calc($padding-xxl + 64px);
+  padding: $padding-md $padding-md 0;
   gap: $gap-md;
+  @include nav-safe-bottom;
 
   &__main {
     flex: 1;
@@ -135,8 +136,9 @@ async function join() {
 
 @media (min-width: $bp-laptop) {
   .join {
-    padding: $padding-xl $padding-xl calc($padding-xxl + 64px);
+    padding: $padding-xl $padding-xl 0;
     gap: $gap-lg;
+    @include nav-safe-bottom($padding-xl);
   }
 }
 </style>

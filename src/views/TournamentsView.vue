@@ -89,8 +89,9 @@ function openTournament(id) {
   display: flex;
   flex-direction: column;
   min-height: 100dvh;
-  padding: $padding-md $padding-md calc($padding-xxl + 64px);
+  padding: $padding-md $padding-md 0;
   gap: $gap-md;
+  @include nav-safe-bottom;
 
   &__main {
     flex: 1;
@@ -122,8 +123,9 @@ function openTournament(id) {
 
 @media (min-width: $bp-laptop) {
   .tournaments {
-    padding: $padding-xl $padding-xl calc($padding-xxl + 64px);
+    padding: $padding-xl $padding-xl 0;
     gap: $gap-lg;
+    @include nav-safe-bottom($padding-xl);
 
     &__main { gap: $gap-xl; padding: $padding-lg 0; }
     &__empty { @include text-md; }
