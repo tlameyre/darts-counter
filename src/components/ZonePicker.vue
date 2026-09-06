@@ -126,7 +126,7 @@ function activeType() {
     align-items: center;
     justify-content: center;
     min-width: 0;
-    aspect-ratio: 1;
+    aspect-ratio: 1; // secteurs carrés — petits écrans uniquement (voir media query)
     @include title-xl;
     background: $bg;
     color: $white;
@@ -166,15 +166,30 @@ function activeType() {
   }
 }
 
-@media (min-width: $bp-tablet) {
+// Écran assez grand (tablette / desktop) : la grille se dimensionne sur la
+// hauteur disponible (au lieu de la largeur) et les cases remplissent toute la
+// place dans la limite de 100dvh — cases rectangulaires, plus d'aspect-ratio
+// carré. En dessous (téléphone), on garde les secteurs carrés + scroll.
+@media (min-width: $bp-tablet) and (min-height: $bp-mobile) {
   .zone-picker {
+    min-height: 0;
+
+    &__grid {
+      flex: 1 1 auto;
+      min-height: 0;
+      width: 100%;
+      grid-template-rows: repeat(4, minmax(0, 1fr)) minmax(0, 0.7fr);
+    }
+
     &__cell {
-      @include title-xxl;
+      aspect-ratio: auto;
+      line-height: 1;
+      @include title-lg;
     }
 
     &__cell--bull {
-      padding: $padding-md;
-      @include title-xl;
+      padding: $padding-xs;
+      @include title-md;
     }
   }
 }

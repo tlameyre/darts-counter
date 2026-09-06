@@ -173,12 +173,28 @@ function startGame() {
     padding: $padding-xl $padding-xl 0;
     @include nav-safe-bottom($padding-xl);
 
-    &__card:last-child {
-      flex: 1;
-    }
-
     &__section-label {
       @include title-xl;
+    }
+  }
+}
+
+// Écran assez grand (tablette / desktop) : on borne à 100dvh et la grille de
+// zones remplit la hauteur restante au lieu de déborder (les secteurs carrés ne
+// restent que sur les petits écrans). Les cartes restent empilées. En dessous
+// (téléphone, y compris paysage), la page scrolle si le contenu dépasse.
+@media (min-width: $bp-tablet) and (min-height: $bp-mobile) {
+  .settings {
+    height: 100dvh;
+    min-height: 0;
+    overflow: hidden;
+
+    &__main {
+      min-height: 0;
+    }
+
+    &__card {
+      min-height: 0;
     }
   }
 }
