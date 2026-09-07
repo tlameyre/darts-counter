@@ -37,6 +37,7 @@ let dirLocked = null // 'h' | 'v' | null
 let capturedId = null
 
 const SWIPE = 60
+const FLY_MS = 200 // doit rester égal à la durée de transition transform/opacity de .deck__card
 
 function capture(id) {
   try { cardEl.value?.setPointerCapture(id) } catch { /* pointeur déjà relâché */ }
@@ -48,7 +49,7 @@ function release(id) {
 const cardStyle = computed(() => ({
   transform: `translateX(${dragX.value}px) rotate(${dragX.value * 0.02}deg)`,
   opacity: String(Math.max(0, Math.min(1, 1 - Math.abs(dragX.value) / 500))),
-  transition: !dragging.value && flying.value ? 'transform 0.2s ease, opacity 0.2s ease' : 'none',
+  transition: !dragging.value && flying.value ? `transform ${FLY_MS}ms ease, opacity ${FLY_MS}ms ease` : 'none',
 }))
 
 function onDown(e) {
@@ -103,7 +104,7 @@ function onUp() {
 function snapBack() {
   flying.value = true
   dragX.value = 0
-  setTimeout(() => { flying.value = false }, 200)
+  setTimeout(() => { flying.value = false }, FLY_MS)
 }
 
 function grade(known) {
@@ -112,11 +113,13 @@ function grade(known) {
   flying.value = true
   dragX.value = (known ? 1 : -1) * 520
   setTimeout(() => {
-    emit('grade', known) // le parent remonte la carte suivante
+    emit('grade', known) // le parent remonte la carte suivante : props (score/checkout/revealed) changent ici
     flying.value = false
     dragX.value = 0
-    animating.value = false
-  }, 170)
+    // `animating` reste vrai un instant de plus pour couper le crossfade recto/verso
+    // (sinon le verso, déjà sur la nouvelle sortie, reste visible le temps de son fondu).
+    setTimeout(() => { animating.value = false }, 50)
+  }, FLY_MS)
 }
 </script>
 
@@ -136,7 +139,7 @@ function grade(known) {
       @pointerup="onUp"
       @pointercancel="onUp"
     >
-      <div class="deck__face" :class="{ 'deck__face--hidden': revealed }">
+      <div class="deck__face" :class="{ 'deck__face--hidden': revealed, 'deck__face--no-transition': animating }">
         <div class="deck__score">{{ score }}</div>
         <p class="deck__hint">Tape pour révéler la sortie</p>
       </div>
@@ -144,7 +147,7 @@ function grade(known) {
         <AppIcon name="arrow-left" :width="22" :height="22" />
       </button>
 
-      <div class="deck__face deck__face--back" :class="{ 'deck__face--hidden': !revealed }">
+      <div class="deck__face deck__face--back" :class="{ 'deck__face--hidden': !revealed, 'deck__face--no-transition': animating }">
         <button type="button" class="deck__board-btn" @click="emit('toggle')">
           <CheckoutBoardRoute :route="selectedRoute || []" class="deck__board" />
         </button>
@@ -249,6 +252,10 @@ function grade(known) {
     &--hidden {
       opacity: 0;
       pointer-events: none;
+    }
+
+    &--no-transition {
+      transition: none;
     }
   }
 
