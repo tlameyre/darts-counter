@@ -49,6 +49,10 @@ const banner = computed(() => {
   return { cls: 'ko', text: 'Sortie invalide' }
 })
 
+const cardClass = computed(() =>
+  props.answered && banner.value ? `quiz__card--${banner.value.cls}` : null,
+)
+
 // Route affichée sur la cible dans l'écran de correction. On la remet sur celle
 // réellement jouée (si valide) ou la recommandée, puis on laisse changer pour
 // continuer d'apprendre les autres sorties en plein quiz.
@@ -64,9 +68,10 @@ watch(
 
 <template>
   <div class="quiz">
-    <div class="quiz__card">
+    <div class="quiz__card" :class="cardClass">
       <span class="quiz__card-label">Reste</span>
       <span class="quiz__card-score">{{ score }}</span>
+      <span v-if="answered && banner" class="quiz__card-result">{{ banner.text }}</span>
     </div>
 
     <span class="quiz__tour">Question {{ counter }}</span>
@@ -108,7 +113,6 @@ watch(
     </template>
 
     <template v-else>
-      <div class="quiz__feedback" :class="`quiz__feedback--${banner.cls}`">{{ banner.text }}</div>
       <div class="quiz__study">
         <CheckoutBoardRoute :route="studyRoute || []" class="quiz__board-route" />
         <CheckoutRouteCard
@@ -135,7 +139,7 @@ watch(
   display: flex;
   flex-direction: column;
   gap: $gap-sm;
-  overflow-y: auto;
+  overflow: hidden;
 
   &__card {
     flex-shrink: 0;
@@ -147,6 +151,16 @@ watch(
     background: $orange;
     border-radius: $radius-lg;
     text-align: center;
+    transition: background 0.2s;
+
+    &--ok { background: $accent-dark; }
+    &--ko { background: $error-dark; }
+  }
+
+  &__card-result {
+    margin-top: $gap-xxs;
+    @include text-sm;
+    color: $white;
   }
 
   &__tour {
@@ -211,28 +225,36 @@ watch(
 
   &__submit { flex: 1; }
 
-  &__next { margin-top: $gap-xs; }
-
-  &__feedback {
-    @include title-md;
-    text-align: center;
-    border-radius: $radius-md;
-    padding: $padding-sm;
-
-    &--ok { background: rgba($accent, 0.18); color: $accent-light; }
-    &--ko { background: rgba($error, 0.18); color: $error-light; }
+  &__next {
+    margin-top: $gap-xs;
+    flex-shrink: 0;
   }
 
+  // Only the route list scrolls, so "Suivant" stays visible.
   &__study {
+    flex: 1;
+    min-height: 0;
+    width: 100%;
     display: flex;
     flex-direction: column;
     align-items: center;
     gap: $gap-sm;
   }
 
-  &__board-route { width: 100%; }
+  // Cap the board so the route list keeps usable height on small screens.
+  &__study &__board-route {
+    flex-shrink: 0;
+    width: auto;
+    height: min(30vh, 240px);
+  }
 
-  &__routes { width: 100%; max-width: 420px; }
+  &__routes {
+    width: 100%;
+    max-width: 420px;
+    flex: 1;
+    min-height: 0;
+    overflow-y: auto;
+  }
 }
 
 @media (min-width: $bp-laptop) {
@@ -248,7 +270,12 @@ watch(
       gap: $gap-xl;
     }
 
-    &__board-route { flex: 1; min-width: 0; }
+    &__study &__board-route {
+      flex: 1;
+      min-width: 0;
+      width: auto;
+      height: auto;
+    }
     &__routes { flex: 1; min-width: 0; max-width: 460px; }
   }
 }
