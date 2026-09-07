@@ -7,12 +7,14 @@ import {
   DARTBOARD_SECTORS,
   SECTOR_ORDER,
 } from '../../data/dartboardSectors.js'
+import AppIcon from '../AppIcon.vue'
 
 const props = defineProps({
   locked: { type: Boolean, default: false },
-  // When true (and on a touch pointer), a quick tap enters the dart directly at
-  // the touched point, while pressing or dragging zooms the board in under the
-  // finger with a crosshair + live label so thin rings can be aimed precisely.
+  // When true (and on a touch pointer): a short tap selects the touched point,
+  // a long press zooms the board in on that spot and stays zoomed so thin rings
+  // can be picked. The zoomed view can't be panned — long-press again to
+  // re-centre, or use the reset button.
   zoomable: { type: Boolean, default: false },
   // When true, the board grows to the largest square that fits its parent, bounded
   // by both width and height, instead of the fixed max-width. The parent must
@@ -23,10 +25,8 @@ const props = defineProps({
 const emit = defineEmits(['dart'])
 
 const ZOOM = 3
-const AIM_OFFSET = 26 // px, lifts the aim point above the fingertip
-const MOVE_THRESHOLD = 12 // px of travel before a press becomes an aim gesture
-const HOLD_MS = 220 // stationary press that long also starts aiming
-const AIM_GAIN = 1.5 // crosshair travel relative to finger travel while aiming
+const HOLD_MS = 250 // press held this long zooms in
+const TAP_SLOP = 10 // px of travel still counts as a tap; more cancels the zoom
 
 // Ring radii in the 453-unit board space (centre = BOARD_SIZE / 2). Matches the
 // geometry baked into DARTBOARD_SECTORS / CheckoutBoardRoute.
@@ -43,10 +43,8 @@ const RING_BY_RADIUS = [
 const zoomEnabled = props.zoomable && window.matchMedia?.('(pointer: coarse)').matches
 
 const svgEl = ref(null)
-const zoomCenter = ref(null) // { x, y } in SVG coords while aiming, else null
-const aimPoint = ref(null) // crosshair position in SVG coords
-const aiming = ref(false)
-const heldSeg = ref(null) // last valid zone under the aim point
+const zoomCenter = ref(null) // { x, y } in SVG coords while zoomed, else null
+const zoomed = ref(false)
 
 const clamp = (v, min, max) => Math.min(Math.max(v, min), max)
 
@@ -66,12 +64,6 @@ function clientToSvg(cx, cy) {
     x: vx + ((cx - rect.left) / rect.width) * vw,
     y: vy + ((cy - rect.top) / rect.height) * vh,
   }
-}
-
-// px per SVG unit at the current zoom.
-function pxPerUnit() {
-  const [, , vw] = viewBox.value.split(' ').map(Number)
-  return svgEl.value.getBoundingClientRect().width / vw
 }
 
 // Zone at a point in SVG coords, computed from board geometry (frame-accurate,
@@ -130,98 +122,64 @@ function flash(seg) {
   _pressTimer = setTimeout(() => { pressedKey.value = null }, 160)
 }
 
-// ─── Pointer gesture: tap = enter, press/drag = zoomed aim ───────────
+// ─── Pointer gesture: short tap selects, long press zooms ────────────
 let holdTimer = null
-let startClient = null
-let lastClient = null
-let aimAnchorClient = null // finger screen pos when aiming started
-let aimAnchorSvg = null // board point under the anchor (full-board frame)
+let downClient = null
+let moved = false
+let holdFired = false
 
 function onPointerDown(e) {
   if (props.locked) return
   try { svgEl.value?.setPointerCapture(e.pointerId) } catch { /* pointer already released */ }
-  startClient = { x: e.clientX, y: e.clientY }
-  lastClient = { ...startClient }
+  downClient = { x: e.clientX, y: e.clientY }
+  moved = false
+  holdFired = false
   clearTimeout(holdTimer)
-  if (zoomEnabled) holdTimer = setTimeout(enterAim, HOLD_MS)
+  if (zoomEnabled) holdTimer = setTimeout(() => zoomAt(downClient), HOLD_MS)
 }
 
 function onPointerMove(e) {
-  if (!startClient) return
-  lastClient = { x: e.clientX, y: e.clientY }
-  if (aiming.value) return updateAim()
-  if (zoomEnabled && Math.hypot(e.clientX - startClient.x, e.clientY - startClient.y) > MOVE_THRESHOLD) {
-    enterAim()
+  if (!downClient || moved) return
+  if (Math.hypot(e.clientX - downClient.x, e.clientY - downClient.y) > TAP_SLOP) {
+    moved = true
+    clearTimeout(holdTimer)
   }
 }
 
-function enterAim() {
-  clearTimeout(holdTimer)
-  if (!zoomEnabled || aiming.value || !startClient) return
-  aiming.value = true
-  aimAnchorClient = { x: lastClient.x, y: lastClient.y }
-  aimAnchorSvg = clientToSvg(lastClient.x, lastClient.y - AIM_OFFSET)
-  aimPoint.value = { ...aimAnchorSvg }
-  zoomCenter.value = { ...aimAnchorSvg }
-  refreshHeld()
-}
-
-// The crosshair tracks finger travel at reduced gain, so a large finger move is
-// a small, controllable aim adjustment. The board stays put and only pans once
-// the crosshair nears the visible edge.
-function updateAim() {
-  if (!aimAnchorClient) return
-  const k = AIM_GAIN / pxPerUnit()
-  const p = {
-    x: clamp(aimAnchorSvg.x + (lastClient.x - aimAnchorClient.x) * k, 0, BOARD_SIZE),
-    y: clamp(aimAnchorSvg.y + (lastClient.y - aimAnchorClient.y) * k, 0, BOARD_SIZE),
-  }
-  aimPoint.value = p
-
-  const half = BOARD_SIZE / ZOOM / 2
-  const keep = half * 0.72 // pan to keep the crosshair within this radius of centre
-  const zc = { ...zoomCenter.value }
-  for (const ax of ['x', 'y']) {
-    const d = p[ax] - zc[ax]
-    if (d > keep) zc[ax] += d - keep
-    else if (d < -keep) zc[ax] += d + keep
-  }
-  zoomCenter.value = zc
-  refreshHeld()
-}
-
-function refreshHeld() {
-  const seg = segAtSvg(aimPoint.value.x, aimPoint.value.y)
-  if (seg) heldSeg.value = seg
+function zoomAt(pt) {
+  const p = clientToSvg(pt.x, pt.y)
+  zoomCenter.value = { x: clamp(p.x, 0, BOARD_SIZE), y: clamp(p.y, 0, BOARD_SIZE) }
+  zoomed.value = true
+  holdFired = true
 }
 
 function onPointerUp(e) {
   clearTimeout(holdTimer)
-  if (!startClient) return
-  const travel = Math.hypot(e.clientX - startClient.x, e.clientY - startClient.y)
-  const seg = aiming.value
-    ? heldSeg.value
-    : (travel <= MOVE_THRESHOLD ? segAtClient(e.clientX, e.clientY) : null)
-  if (seg) {
-    flash(seg)
-    emit('dart', buildDart(seg))
+  if (!downClient) return
+  if (!holdFired && !moved) {
+    const seg = segAtClient(e.clientX, e.clientY)
+    if (seg) {
+      flash(seg)
+      emit('dart', buildDart(seg))
+      resetZoom()
+    }
   }
-  reset()
+  endGesture()
 }
 
-function reset() {
+function endGesture() {
   clearTimeout(holdTimer)
-  aiming.value = false
-  zoomCenter.value = null
-  aimPoint.value = null
-  heldSeg.value = null
-  startClient = null
-  lastClient = null
-  aimAnchorClient = null
-  aimAnchorSvg = null
+  downClient = null
+  moved = false
+  holdFired = false
 }
 
-watch(() => props.locked, (v) => { if (v) reset() })
+function resetZoom() {
+  zoomed.value = false
+  zoomCenter.value = null
+}
+
+watch(() => props.locked, (v) => { if (v) { resetZoom(); endGesture() } })
 
 const sectors = computed(() => DARTBOARD_SECTORS)
 </script>
@@ -237,21 +195,19 @@ const sectors = computed(() => DARTBOARD_SECTORS)
       @pointerdown="onPointerDown"
       @pointermove="onPointerMove"
       @pointerup="onPointerUp"
-      @pointercancel="reset"
+      @pointercancel="endGesture"
+      @contextmenu.prevent
     >
       <path class="dartboard__bg" :d="BOARD_BACKGROUND_PATH" />
       <path v-for="seg in sectors" :key="zoneKey(seg)" class="dartboard__zone" :class="[zoneClass(seg), {
         'dartboard__zone--pressed': pressedKey === zoneKey(seg),
       }]" :d="seg.d" />
       <path v-for="(d, i) in NUMBER_LABEL_PATHS" :key="i" class="dartboard__label" :d="d" />
-      <g v-if="aiming && aimPoint" class="dartboard__crosshair"
-        :transform="`translate(${aimPoint.x} ${aimPoint.y})`">
-        <circle r="9" />
-        <line x1="-15" y1="0" x2="15" y2="0" />
-        <line x1="0" y1="-15" x2="0" y2="15" />
-      </g>
     </svg>
-    <div v-if="aiming" class="dartboard__aim-label">{{ heldSeg ? buildDart(heldSeg).label : '—' }}</div>
+    <button v-if="zoomed" type="button" class="dartboard__reset" @click="resetZoom">
+      <AppIcon name="zoom-out" :width="18" :height="18" />
+      Dézoomer
+    </button>
   </div>
 </template>
 
@@ -278,7 +234,7 @@ const sectors = computed(() => DARTBOARD_SECTORS)
   user-select: none;
 
   &--zoomable {
-    touch-action: none;
+    touch-action: pan-y;
   }
 
   &--locked {
@@ -287,31 +243,22 @@ const sectors = computed(() => DARTBOARD_SECTORS)
   }
 }
 
-.dartboard__crosshair {
-  pointer-events: none;
-  fill: none;
-  stroke: $white;
-  stroke-width: 2;
-  vector-effect: non-scaling-stroke;
-
-  circle {
-    fill: rgba($white, 0.14);
-  }
-}
-
-.dartboard__aim-label {
+.dartboard__reset {
   position: absolute;
   top: $padding-xs;
-  left: 50%;
-  transform: translateX(-50%);
-  pointer-events: none;
+  right: $padding-xs;
+  display: flex;
+  align-items: center;
+  gap: $gap-xxs;
   padding: $padding-xxs $padding-sm;
   border: $border-sm solid $white;
   border-radius: $radius-pill;
   background: $bg;
   color: $white;
-  @include title-sm;
-  font-variant-numeric: tabular-nums;
+  @include text-xs;
+  transition: opacity 0.15s;
+
+  &:active { opacity: 0.6; }
 }
 
 .dartboard__bg {
