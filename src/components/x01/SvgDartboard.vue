@@ -1,6 +1,12 @@
 <script setup>
 import { ref, computed, watch } from 'vue'
-import { BOARD_SIZE, BOARD_BACKGROUND_PATH, NUMBER_LABEL_PATHS, DARTBOARD_SECTORS } from '../../data/dartboardSectors.js'
+import {
+  BOARD_SIZE,
+  BOARD_BACKGROUND_PATH,
+  NUMBER_LABEL_PATHS,
+  DARTBOARD_SECTORS,
+  SECTOR_ORDER,
+} from '../../data/dartboardSectors.js'
 
 const props = defineProps({
   locked: { type: Boolean, default: false },
@@ -17,9 +23,22 @@ const props = defineProps({
 const emit = defineEmits(['dart'])
 
 const ZOOM = 3
-const AIM_OFFSET = 28 // px, lifts the aim point above the fingertip
-const MOVE_THRESHOLD = 8 // px of travel before a press becomes an aim gesture
-const HOLD_MS = 200 // stationary press that long also starts aiming
+const AIM_OFFSET = 26 // px, lifts the aim point above the fingertip
+const MOVE_THRESHOLD = 12 // px of travel before a press becomes an aim gesture
+const HOLD_MS = 220 // stationary press that long also starts aiming
+const AIM_GAIN = 0.35 // crosshair moves this fraction of the finger travel while aiming
+
+// Ring radii in the 453-unit board space (centre = BOARD_SIZE / 2). Matches the
+// geometry baked into DARTBOARD_SECTORS / CheckoutBoardRoute.
+const C = BOARD_SIZE / 2
+const RING_BY_RADIUS = [
+  { max: 6.9, ring: 'bull-inner' },
+  { max: 16.45, ring: 'bull-outer' },
+  { max: 98.45, ring: 'single-inner' },
+  { max: 107.55, ring: 'triple' },
+  { max: 161.45, ring: 'single-outer' },
+  { max: 170.55, ring: 'double' },
+]
 
 const zoomEnabled = props.zoomable && window.matchMedia?.('(pointer: coarse)').matches
 
@@ -49,11 +68,32 @@ function clientToSvg(cx, cy) {
   }
 }
 
-// Zone rendered under a screen point, or null (gap / background / off-board).
+// px per SVG unit at the current zoom.
+function pxPerUnit() {
+  const [, , vw] = viewBox.value.split(' ').map(Number)
+  return svgEl.value.getBoundingClientRect().width / vw
+}
+
+// Zone at a point in SVG coords, computed from board geometry (frame-accurate,
+// no dependency on the rendered DOM). Returns null outside the scoring area.
+function segAtSvg(x, y) {
+  const dx = x - C
+  const dy = y - C
+  const r = Math.hypot(dx, dy)
+  const band = RING_BY_RADIUS.find((b) => r <= b.max)
+  if (!band) return null
+  if (band.ring === 'bull-inner' || band.ring === 'bull-outer') {
+    return sectors.value.find((s) => s.ring === band.ring) ?? null
+  }
+  let deg = (Math.atan2(dx, -dy) * 180) / Math.PI
+  if (deg < 0) deg += 360
+  const sector = SECTOR_ORDER[Math.round(deg / 18) % 20]
+  return sectors.value.find((s) => s.ring === band.ring && s.sector === sector) ?? null
+}
+
 function segAtClient(cx, cy) {
-  const el = document.elementFromPoint(cx, cy)
-  if (el && el.classList.contains('dartboard__zone')) return sectors.value[+el.dataset.seg]
-  return null
+  const p = clientToSvg(cx, cy)
+  return segAtSvg(p.x, p.y)
 }
 
 // Secteurs rouges/noirs sur la cible (doubles/triples = rouge, simple = noir)
@@ -94,6 +134,8 @@ function flash(seg) {
 let holdTimer = null
 let startClient = null
 let lastClient = null
+let aimAnchorClient = null // finger screen pos when aiming started
+let aimAnchorSvg = null // board point under the anchor (full-board frame)
 
 function onPointerDown(e) {
   if (props.locked) return
@@ -117,16 +159,40 @@ function enterAim() {
   clearTimeout(holdTimer)
   if (!zoomEnabled || aiming.value || !startClient) return
   aiming.value = true
-  updateAim()
+  aimAnchorClient = { x: lastClient.x, y: lastClient.y }
+  aimAnchorSvg = clientToSvg(lastClient.x, lastClient.y - AIM_OFFSET)
+  aimPoint.value = { ...aimAnchorSvg }
+  zoomCenter.value = { ...aimAnchorSvg }
+  refreshHeld()
 }
 
+// The crosshair tracks finger travel at reduced gain, so a large finger move is
+// a small, controllable aim adjustment. The board stays put and only pans once
+// the crosshair nears the visible edge.
 function updateAim() {
-  if (!lastClient) return
-  const seg = segAtClient(lastClient.x, lastClient.y - AIM_OFFSET)
+  if (!aimAnchorClient) return
+  const k = AIM_GAIN / pxPerUnit()
+  const p = {
+    x: clamp(aimAnchorSvg.x + (lastClient.x - aimAnchorClient.x) * k, 0, BOARD_SIZE),
+    y: clamp(aimAnchorSvg.y + (lastClient.y - aimAnchorClient.y) * k, 0, BOARD_SIZE),
+  }
+  aimPoint.value = p
+
+  const half = BOARD_SIZE / ZOOM / 2
+  const keep = half * 0.72 // pan to keep the crosshair within this radius of centre
+  const zc = { ...zoomCenter.value }
+  for (const ax of ['x', 'y']) {
+    const d = p[ax] - zc[ax]
+    if (d > keep) zc[ax] += d - keep
+    else if (d < -keep) zc[ax] += d + keep
+  }
+  zoomCenter.value = zc
+  refreshHeld()
+}
+
+function refreshHeld() {
+  const seg = segAtSvg(aimPoint.value.x, aimPoint.value.y)
   if (seg) heldSeg.value = seg
-  const p = clientToSvg(lastClient.x, lastClient.y - AIM_OFFSET)
-  aimPoint.value = { x: clamp(p.x, 0, BOARD_SIZE), y: clamp(p.y, 0, BOARD_SIZE) }
-  zoomCenter.value = aimPoint.value
 }
 
 function onPointerUp(e) {
@@ -151,6 +217,8 @@ function reset() {
   heldSeg.value = null
   startClient = null
   lastClient = null
+  aimAnchorClient = null
+  aimAnchorSvg = null
 }
 
 watch(() => props.locked, (v) => { if (v) reset() })
@@ -172,9 +240,9 @@ const sectors = computed(() => DARTBOARD_SECTORS)
       @pointercancel="reset"
     >
       <path class="dartboard__bg" :d="BOARD_BACKGROUND_PATH" />
-      <path v-for="(seg, i) in sectors" :key="zoneKey(seg)" class="dartboard__zone" :class="[zoneClass(seg), {
+      <path v-for="seg in sectors" :key="zoneKey(seg)" class="dartboard__zone" :class="[zoneClass(seg), {
         'dartboard__zone--pressed': pressedKey === zoneKey(seg),
-      }]" :d="seg.d" :data-seg="i" />
+      }]" :d="seg.d" />
       <path v-for="(d, i) in NUMBER_LABEL_PATHS" :key="i" class="dartboard__label" :d="d" />
       <g v-if="aiming && aimPoint" class="dartboard__crosshair"
         :transform="`translate(${aimPoint.x} ${aimPoint.y})`">
