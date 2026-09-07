@@ -183,10 +183,9 @@ watch(
     padding: $padding-xs 0;
 
     &--grid {
-      flex: none;
       container-type: normal;
+      align-items: stretch;
       padding: 0;
-      height: 340px;
     }
   }
 
