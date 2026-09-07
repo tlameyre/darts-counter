@@ -26,7 +26,7 @@ const ZOOM = 3
 const AIM_OFFSET = 26 // px, lifts the aim point above the fingertip
 const MOVE_THRESHOLD = 12 // px of travel before a press becomes an aim gesture
 const HOLD_MS = 220 // stationary press that long also starts aiming
-const AIM_GAIN = 0.75 // crosshair moves this fraction of the finger travel while aiming
+const AIM_GAIN = 0.9 // crosshair moves this fraction of the finger travel while aiming
 
 // Ring radii in the 453-unit board space (centre = BOARD_SIZE / 2). Matches the
 // geometry baked into DARTBOARD_SECTORS / CheckoutBoardRoute.
