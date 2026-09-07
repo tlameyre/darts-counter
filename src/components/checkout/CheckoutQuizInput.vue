@@ -1,11 +1,12 @@
 <script setup>
-import { ref, computed } from 'vue'
+import { ref, shallowRef, computed, watch } from 'vue'
 import AppButton from '../AppButton.vue'
 import AppIcon from '../AppIcon.vue'
 import SvgDartboard from '../x01/SvgDartboard.vue'
 import SectorGrid from '../game/SectorGrid.vue'
 import DartSlotsBar from '../game/DartSlotsBar.vue'
 import CheckoutRouteCard from './CheckoutRouteCard.vue'
+import CheckoutBoardRoute from './CheckoutBoardRoute.vue'
 
 const INPUT_KEY = 'checkout-quiz-input'
 const inputMode = ref(
@@ -31,7 +32,7 @@ const props = defineProps({
   checkout: { type: Object, default: null },
   attemptDarts: { type: Array, required: true },
   answered: { type: Boolean, default: false },
-  lastResult: { type: Object, default: null }, // { correct, optimal, points }
+  lastResult: { type: Object, default: null }, // { score, darts, correct, optimal, points }
   progress: { type: Object, required: true },
 })
 
@@ -47,9 +48,21 @@ const banner = computed(() => {
   const r = props.lastResult
   if (!r) return null
   if (r.optimal) return { cls: 'ok', text: `Parfait — route recommandée · +${r.points}` }
-  if (r.correct) return { cls: 'ok', text: `Sortie valide · +${r.points}` }
+  if (r.correct) return { cls: 'ok', text: `Sortie valide · +${r.points} — la recommandée compte double` }
   return { cls: 'ko', text: 'Sortie invalide' }
 })
+
+// Route affichée sur la cible dans l'écran de correction. On la remet sur celle
+// réellement jouée (si valide) ou la recommandée, puis on laisse changer pour
+// continuer d'apprendre les autres sorties en plein quiz.
+const playedRoute = computed(() => (props.lastResult?.correct ? props.lastResult.darts : null))
+const studyRoute = shallowRef(null)
+watch(
+  () => props.answered,
+  (a) => {
+    if (a) studyRoute.value = playedRoute.value ?? props.checkout?.primary ?? null
+  },
+)
 </script>
 
 <template>
@@ -97,7 +110,18 @@ const banner = computed(() => {
 
     <template v-else>
       <div class="quiz__feedback" :class="`quiz__feedback--${banner.cls}`">{{ banner.text }}</div>
-      <CheckoutRouteCard :checkout="checkout" class="quiz__routes" />
+      <div class="quiz__study">
+        <CheckoutBoardRoute :route="studyRoute || []" class="quiz__board-route" />
+        <CheckoutRouteCard
+          :checkout="checkout"
+          size="md"
+          selectable
+          :selected="studyRoute"
+          :played="playedRoute"
+          class="quiz__routes"
+          @select="studyRoute = $event"
+        />
+      </div>
       <AppButton class="quiz__next" @click="emit('next')">
         {{ isLast ? 'Voir le récap' : 'Suivant' }}
       </AppButton>
@@ -190,14 +214,32 @@ const banner = computed(() => {
     &--ko { background: rgba($error, 0.18); color: $error-light; }
   }
 
-  &__routes { align-self: center; max-width: 420px; }
+  &__study {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: $gap-sm;
+  }
+
+  &__board-route { width: 100%; }
+
+  &__routes { width: 100%; max-width: 420px; }
 }
 
 @media (min-width: $bp-laptop) {
   .quiz {
     &__counter { @include text-md; }
     &__target { @include text-lg; }
-    &__routes { max-width: 520px; }
+
+    &__study {
+      flex-direction: row;
+      align-items: flex-start;
+      justify-content: center;
+      gap: $gap-xl;
+    }
+
+    &__board-route { flex: 1; min-width: 0; }
+    &__routes { flex: 1; min-width: 0; max-width: 460px; }
   }
 }
 </style>

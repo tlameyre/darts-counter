@@ -80,7 +80,9 @@ export function useCheckoutTrainer({ variant, brackets, order = "asc", count = 1
     const score = currentScore.value;
     const correct = isValidFinish(attemptDarts.value, score);
     const optimal = correct && matchesRoute(attemptDarts.value, currentCheckout.value?.primary);
-    const points = correct ? bracketPoints(score) : 0;
+    // Doubling the bracket weight rewards taking the recommended route,
+    // and the reward scales with the checkout's difficulty.
+    const points = correct ? bracketPoints(score) * (optimal ? 2 : 1) : 0;
     if (correct) {
       streak += 1;
       bestStreak = Math.max(bestStreak, streak);

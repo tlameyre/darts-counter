@@ -9,6 +9,7 @@ const props = defineProps({
   size: { type: String, default: 'sm', validator: (v) => ['sm', 'md'].includes(v) },
   selectable: { type: Boolean, default: false },
   selected: { type: Array, default: null }, // Dart[] actif quand selectable
+  played: { type: Array, default: null }, // Dart[] réellement lancées (quiz) — marque la ligne
 })
 
 const emit = defineEmits(['select'])
@@ -25,12 +26,16 @@ const rows = computed(() => {
 })
 
 const selectedKey = computed(() => (props.selected ? formatRoute(props.selected) : null))
+const playedKey = computed(() => (props.played?.length ? formatRoute(props.played) : null))
 
-function rowClass(row, i) {
-  if (props.selectable) {
-    return { 'route-card__row--active': formatRoute(row.route) === selectedKey.value }
+const isPlayed = (row) => playedKey.value != null && formatRoute(row.route) === playedKey.value
+
+function rowClass(row) {
+  return {
+    'route-card__row--strong': row.key === 'primary' && props.highlightPrimary,
+    'route-card__row--active': props.selectable && formatRoute(row.route) === selectedKey.value,
+    'route-card__row--played': isPlayed(row),
   }
-  return { 'route-card__row--strong': i === 0 && props.highlightPrimary }
 }
 </script>
 
@@ -38,13 +43,16 @@ function rowClass(row, i) {
   <div v-if="rows.length" class="route-card">
     <component
       :is="selectable ? 'button' : 'div'"
-      v-for="(row, i) in rows"
+      v-for="row in rows"
       :key="row.key"
       class="route-card__row"
-      :class="rowClass(row, i)"
+      :class="rowClass(row)"
       @click="selectable && emit('select', row.route)"
     >
-      <span class="route-card__tag">{{ row.label }}</span>
+      <span class="route-card__tag">
+        {{ row.label }}
+        <span v-if="isPlayed(row)" class="route-card__played-tag">· jouée</span>
+      </span>
       <span class="route-card__darts">
         <DartPill v-for="(d, j) in row.route" :key="j" :dart="d" :size="size" />
         <span v-if="row.leaves != null" class="route-card__leaves">→ laisse {{ row.leaves }}</span>
@@ -82,6 +90,10 @@ function rowClass(row, i) {
       background: rgba($accent, 0.2);
       border-color: $accent;
     }
+
+    &--played {
+      border-color: $orange;
+    }
   }
 
   button.route-card__row {
@@ -96,6 +108,10 @@ function rowClass(row, i) {
     color: $muted;
     text-transform: uppercase;
     letter-spacing: 0.04em;
+  }
+
+  &__played-tag {
+    color: $orange;
   }
 
   &__darts {
