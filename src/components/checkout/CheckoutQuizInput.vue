@@ -65,10 +65,11 @@ watch(
 <template>
   <div class="quiz">
     <div class="quiz__card">
-      <span class="quiz__card-count">{{ counter }}</span>
       <span class="quiz__card-label">Reste</span>
       <span class="quiz__card-score">{{ score }}</span>
     </div>
+
+    <span class="quiz__tour">Question {{ counter }}</span>
 
     <DartSlotsBar
       class="quiz__slots"
@@ -137,7 +138,6 @@ watch(
   overflow-y: auto;
 
   &__card {
-    position: relative;
     flex-shrink: 0;
     display: flex;
     flex-direction: column;
@@ -149,12 +149,10 @@ watch(
     text-align: center;
   }
 
-  &__card-count {
-    position: absolute;
-    top: $padding-sm;
-    right: $padding-md;
-    @include text-xs;
-    color: rgba($white, 0.7);
+  &__tour {
+    flex-shrink: 0;
+    @include title-md;
+    color: $white;
     font-variant-numeric: tabular-nums;
   }
 
@@ -241,6 +239,7 @@ watch(
   .quiz {
     &__card-label { @include text-md; }
     &__card-score { @include display-md; }
+    &__tour { @include title-lg; }
 
     &__study {
       flex-direction: row;
