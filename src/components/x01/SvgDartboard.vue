@@ -1,12 +1,46 @@
 <script setup>
-import { ref, computed } from 'vue'
+import { ref, computed, watch } from 'vue'
 import { BOARD_SIZE, BOARD_BACKGROUND_PATH, NUMBER_LABEL_PATHS, DARTBOARD_SECTORS } from '../../data/dartboardSectors.js'
+import AppIcon from '../AppIcon.vue'
 
 const props = defineProps({
   locked: { type: Boolean, default: false },
+  // When true (and on a touch pointer), a first tap zooms the board in on the
+  // touched area so thin rings can be aimed precisely; the next tap selects.
+  zoomable: { type: Boolean, default: false },
 })
 
 const emit = defineEmits(['dart'])
+
+const ZOOM = 2.5
+const zoomEnabled = props.zoomable && window.matchMedia?.('(pointer: coarse)').matches
+const zoomCenter = ref(null) // { x, y } in SVG coords, or null for the full board
+
+const clamp = (v, min, max) => Math.min(Math.max(v, min), max)
+
+const viewBox = computed(() => {
+  if (!zoomCenter.value) return `0 0 ${BOARD_SIZE} ${BOARD_SIZE}`
+  const w = BOARD_SIZE / ZOOM
+  const x = clamp(zoomCenter.value.x - w / 2, 0, BOARD_SIZE - w)
+  const y = clamp(zoomCenter.value.y - w / 2, 0, BOARD_SIZE - w)
+  return `${x} ${y} ${w} ${w}`
+})
+
+// Map a click to a point in the SVG coordinate space, accounting for the
+// current (possibly zoomed) viewBox.
+function toSvgPoint(event) {
+  const svg = event.currentTarget.ownerSVGElement
+  const rect = svg.getBoundingClientRect()
+  const [vx, vy, vw, vh] = viewBox.value.split(' ').map(Number)
+  return {
+    x: vx + ((event.clientX - rect.left) / rect.width) * vw,
+    y: vy + ((event.clientY - rect.top) / rect.height) * vh,
+  }
+}
+
+watch(() => props.locked, (v) => {
+  if (v) zoomCenter.value = null
+})
 
 // Secteurs rouges/noirs sur la cible (doubles/triples = rouge, simple = noir)
 const RED_NUMBERS = new Set([20, 18, 13, 10, 2, 3, 7, 8, 14, 12])
@@ -36,34 +70,54 @@ function buildDart(seg) {
   return { type: 'single', sector: seg.sector, pts: seg.sector, label: String(seg.sector) }
 }
 
-function tapZone(seg) {
-  if (props.locked) return
+function flash(seg) {
   clearTimeout(_pressTimer)
   pressedKey.value = zoneKey(seg)
   _pressTimer = setTimeout(() => { pressedKey.value = null }, 160)
+}
+
+function tapZone(seg, event) {
+  if (props.locked) return
+  if (zoomEnabled && !zoomCenter.value) {
+    zoomCenter.value = toSvgPoint(event)
+    return
+  }
+  flash(seg)
   emit('dart', buildDart(seg))
+  zoomCenter.value = null
 }
 
 const sectors = computed(() => DARTBOARD_SECTORS)
 </script>
 
 <template>
-  <svg class="dartboard" :class="{ 'dartboard--locked': locked }" :viewBox="`0 0 ${BOARD_SIZE} ${BOARD_SIZE}`"
-    xmlns="http://www.w3.org/2000/svg">
-    <path class="dartboard__bg" :d="BOARD_BACKGROUND_PATH" />
-    <path v-for="seg in sectors" :key="zoneKey(seg)" class="dartboard__zone" :class="[zoneClass(seg), {
-      'dartboard__zone--pressed': pressedKey === zoneKey(seg),
-    }]" :d="seg.d" @click="tapZone(seg)" />
-    <path v-for="(d, i) in NUMBER_LABEL_PATHS" :key="i" class="dartboard__label" :d="d" />
-  </svg>
+  <div class="dartboard-wrap">
+    <svg class="dartboard" :class="{ 'dartboard--locked': locked }" :viewBox="viewBox"
+      xmlns="http://www.w3.org/2000/svg">
+      <path class="dartboard__bg" :d="BOARD_BACKGROUND_PATH" />
+      <path v-for="seg in sectors" :key="zoneKey(seg)" class="dartboard__zone" :class="[zoneClass(seg), {
+        'dartboard__zone--pressed': pressedKey === zoneKey(seg),
+      }]" :d="seg.d" @click="tapZone(seg, $event)" />
+      <path v-for="(d, i) in NUMBER_LABEL_PATHS" :key="i" class="dartboard__label" :d="d" />
+    </svg>
+    <button v-if="zoomCenter" type="button" class="dartboard__reset" @click="zoomCenter = null">
+      <AppIcon name="zoom-out" :width="18" :height="18" />
+      Dézoomer
+    </button>
+  </div>
 </template>
 
 <style lang="scss" scoped>
-.dartboard {
-  display: block;
+.dartboard-wrap {
+  position: relative;
   width: 100%;
   max-width: 420px;
   margin: 0 auto;
+}
+
+.dartboard {
+  display: block;
+  width: 100%;
   aspect-ratio: 1;
   touch-action: manipulation;
 
@@ -71,6 +125,24 @@ const sectors = computed(() => DARTBOARD_SECTORS)
     pointer-events: none;
     opacity: 0.6;
   }
+}
+
+.dartboard__reset {
+  position: absolute;
+  top: $padding-xs;
+  right: $padding-xs;
+  display: flex;
+  align-items: center;
+  gap: $gap-xxs;
+  padding: $padding-xxs $padding-sm;
+  border: $border-sm solid $white;
+  border-radius: $radius-pill;
+  background: $bg;
+  color: $white;
+  @include text-xs;
+  transition: opacity 0.15s;
+
+  &:active { opacity: 0.6; }
 }
 
 .dartboard__bg {
@@ -101,7 +173,7 @@ const sectors = computed(() => DARTBOARD_SECTORS)
 }
 
 @media (min-width: $bp-laptop) {
-  .dartboard {
+  .dartboard-wrap {
     max-width: 520px;
   }
 }

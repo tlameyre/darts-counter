@@ -363,7 +363,7 @@ const mockSent = [
 
     <!-- SvgDartboard plein écran -->
     <div v-if="showDartboardPreview" class="dev__fullscreen-preview dev__dartboard-preview">
-      <SvgDartboard @dart="lastDart = $event" />
+      <SvgDartboard zoomable @dart="lastDart = $event" />
       <pre class="dev__dartboard-log">{{ lastDart ? JSON.stringify(lastDart) : 'Tape une zone…' }}</pre>
       <button class="dev__close-preview" @click="showDartboardPreview = false">✕ Fermer</button>
     </div>

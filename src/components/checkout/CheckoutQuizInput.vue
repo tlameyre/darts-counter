@@ -79,6 +79,7 @@ const banner = computed(() => {
       <SvgDartboard
         v-else
         :locked="attemptDarts.length >= 3"
+        zoomable
         @dart="emit('dart', $event)"
       />
     </div>
