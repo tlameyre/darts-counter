@@ -8,6 +8,10 @@ const props = defineProps({
   // When true (and on a touch pointer), a first tap zooms the board in on the
   // touched area so thin rings can be aimed precisely; the next tap selects.
   zoomable: { type: Boolean, default: false },
+  // When true, the board grows to the largest square that fits its parent, bounded
+  // by both width and height, instead of the fixed max-width. The parent must
+  // establish a size container (`container-type: size`) with a constrained height.
+  fill: { type: Boolean, default: false },
 })
 
 const emit = defineEmits(['dart'])
@@ -91,7 +95,7 @@ const sectors = computed(() => DARTBOARD_SECTORS)
 </script>
 
 <template>
-  <div class="dartboard-wrap">
+  <div class="dartboard-wrap" :class="{ 'dartboard-wrap--fill': fill }">
     <svg class="dartboard" :class="{ 'dartboard--locked': locked }" :viewBox="viewBox"
       xmlns="http://www.w3.org/2000/svg">
       <path class="dartboard__bg" :d="BOARD_BACKGROUND_PATH" />
@@ -113,6 +117,13 @@ const sectors = computed(() => DARTBOARD_SECTORS)
   width: 100%;
   max-width: 420px;
   margin: 0 auto;
+
+  // Grow to the largest square that fits the parent box (width *and* height).
+  // Relies on the parent being a size container — see the `fill` prop.
+  &--fill {
+    width: min(100cqw, 100cqh);
+    max-width: min(100cqw, 100cqh);
+  }
 }
 
 .dartboard {
@@ -173,7 +184,7 @@ const sectors = computed(() => DARTBOARD_SECTORS)
 }
 
 @media (min-width: $bp-laptop) {
-  .dartboard-wrap {
+  .dartboard-wrap:not(.dartboard-wrap--fill) {
     max-width: 520px;
   }
 }

@@ -75,6 +75,7 @@ watch(
     </div>
 
     <DartSlotsBar
+      class="quiz__slots"
       :mode="inputMode"
       :modes="['board', 'dart']"
       :toggleable="!answered"
@@ -93,6 +94,7 @@ watch(
         v-else
         :locked="attemptDarts.length >= 3"
         zoomable
+        fill
         @dart="emit('dart', $event)"
       />
     </div>
@@ -143,6 +145,7 @@ watch(
     align-items: center;
     justify-content: space-between;
     gap: $gap-sm;
+    flex-shrink: 0;
   }
 
   &__counter {
@@ -168,21 +171,29 @@ watch(
     &--done { color: $accent; }
   }
 
+  &__slots { flex-shrink: 0; }
+
   &__board {
+    flex: 1;
+    min-height: 0;
+    container-type: size;
     display: flex;
+    align-items: center;
     justify-content: center;
     padding: $padding-xs 0;
 
     &--grid {
+      flex: none;
+      container-type: normal;
       padding: 0;
       height: 340px;
-      flex-shrink: 0;
     }
   }
 
   &__actions {
     display: flex;
     gap: $gap-sm;
+    flex-shrink: 0;
   }
 
   &__undo {
