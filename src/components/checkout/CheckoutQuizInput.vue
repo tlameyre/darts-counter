@@ -69,66 +69,69 @@ watch(
 <template>
   <div class="quiz">
     <div class="quiz__card" :class="cardClass">
-      <span class="quiz__card-label">Reste</span>
-      <span class="quiz__card-score">{{ score }}</span>
-      <span v-if="answered && banner" class="quiz__card-result">{{ banner.text }}</span>
+      <span class="quiz__card-count">Question {{ counter }}</span>
+      <div class="quiz__card-body">
+        <span class="quiz__card-label">Reste</span>
+        <span class="quiz__card-score">{{ score }}</span>
+        <span v-if="answered && banner" class="quiz__card-result">{{ banner.text }}</span>
+      </div>
     </div>
 
-    <span class="quiz__tour">Question {{ counter }}</span>
-
-    <DartSlotsBar
-      class="quiz__slots"
-      :mode="inputMode"
-      :modes="['board', 'dart']"
-      :toggleable="!answered"
-      :darts="attemptDarts"
-      value-key="label"
-      @select="setInputMode"
-    />
-
-    <div v-if="!answered" class="quiz__board" :class="{ 'quiz__board--grid': inputMode === 'dart' }">
-      <SectorGrid
-        v-if="inputMode === 'dart'"
-        :locked="attemptDarts.length >= 3"
-        @dart="emit('dart', $event)"
+    <div class="quiz__main">
+      <DartSlotsBar
+        class="quiz__slots"
+        :mode="inputMode"
+        :modes="['board', 'dart']"
+        :toggleable="!answered"
+        :darts="attemptDarts"
+        value-key="label"
+        @select="setInputMode"
       />
-      <SvgDartboard
-        v-else
-        :locked="attemptDarts.length >= 3"
-        zoomable
-        fill
-        @dart="emit('dart', $event)"
-      />
-    </div>
 
-    <template v-if="!answered">
-      <div class="quiz__actions">
-        <button class="quiz__undo" :disabled="!attemptDarts.length" @click="emit('undo')">
-          <AppIcon name="undo" :width="24" :height="24" />
-        </button>
-        <AppButton class="quiz__submit" :disabled="!attemptDarts.length" @click="emit('submit')">
-          Valider
+      <template v-if="!answered">
+        <div class="quiz__board" :class="{ 'quiz__board--grid': inputMode === 'dart' }">
+          <SectorGrid
+            v-if="inputMode === 'dart'"
+            :locked="attemptDarts.length >= 3"
+            @dart="emit('dart', $event)"
+          />
+          <SvgDartboard
+            v-else
+            :locked="attemptDarts.length >= 3"
+            zoomable
+            fill
+            @dart="emit('dart', $event)"
+          />
+        </div>
+
+        <div class="quiz__actions">
+          <button class="quiz__undo" :disabled="!attemptDarts.length" @click="emit('undo')">
+            <AppIcon name="undo" :width="24" :height="24" />
+          </button>
+          <AppButton class="quiz__submit" :disabled="!attemptDarts.length" @click="emit('submit')">
+            Valider
+          </AppButton>
+        </div>
+      </template>
+
+      <template v-else>
+        <div class="quiz__study">
+          <CheckoutBoardRoute :route="studyRoute || []" class="quiz__board-route" />
+          <CheckoutRouteCard
+            :checkout="checkout"
+            size="md"
+            selectable
+            :selected="studyRoute"
+            :played="playedRoute"
+            class="quiz__routes"
+            @select="studyRoute = $event"
+          />
+        </div>
+        <AppButton class="quiz__next" @click="emit('next')">
+          {{ isLast ? 'Voir le récap' : 'Suivant' }}
         </AppButton>
-      </div>
-    </template>
-
-    <template v-else>
-      <div class="quiz__study">
-        <CheckoutBoardRoute :route="studyRoute || []" class="quiz__board-route" />
-        <CheckoutRouteCard
-          :checkout="checkout"
-          size="md"
-          selectable
-          :selected="studyRoute"
-          :played="playedRoute"
-          class="quiz__routes"
-          @select="studyRoute = $event"
-        />
-      </div>
-      <AppButton class="quiz__next" @click="emit('next')">
-        {{ isLast ? 'Voir le récap' : 'Suivant' }}
-      </AppButton>
-    </template>
+      </template>
+    </div>
   </div>
 </template>
 
@@ -136,17 +139,28 @@ watch(
 .quiz {
   flex: 1;
   min-height: 0;
+  width: 100%;
+  max-width: 600px;
+  margin: 0 auto;
   display: flex;
   flex-direction: column;
   gap: $gap-sm;
   overflow: hidden;
+
+  &__main {
+    flex: 1;
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
+    gap: $gap-sm;
+  }
 
   &__card {
     flex-shrink: 0;
     display: flex;
     flex-direction: column;
     align-items: center;
-    gap: $gap-xxs;
+    gap: $gap-sm;
     padding: $padding-md;
     background: $orange;
     border-radius: $radius-lg;
@@ -157,17 +171,28 @@ watch(
     &--ko { background: $error-dark; }
   }
 
+  &__card-count {
+    flex-shrink: 0;
+    @include text-sm;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    color: rgba($white, 0.75);
+    font-variant-numeric: tabular-nums;
+  }
+
+  &__card-body {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: $gap-xxs;
+  }
+
   &__card-result {
     margin-top: $gap-xxs;
     @include text-sm;
     color: $white;
-  }
-
-  &__tour {
-    flex-shrink: 0;
-    @include title-md;
-    color: $white;
-    font-variant-numeric: tabular-nums;
   }
 
   &__card-label {
@@ -259,13 +284,32 @@ watch(
 
 @media (min-width: $bp-laptop) {
   .quiz {
+    max-width: none;
+    flex-direction: row;
+    align-items: stretch;
+    justify-content: center;
+    gap: $gap-xl;
+
+    &__main {
+      max-width: 760px;
+    }
+
+    &__card {
+      width: 340px;
+      flex-shrink: 0;
+    }
+
+    &__card-count { @include text-md; }
     &__card-label { @include text-md; }
-    &__card-score { @include display-md; }
+    &__card-score { @include display-lg; }
+    &__card-result { @include text-md; }
     &__tour { @include title-lg; }
 
     &__study {
+      flex: 1;
+      min-height: 0;
       flex-direction: row;
-      align-items: flex-start;
+      align-items: stretch;
       justify-content: center;
       gap: $gap-xl;
     }
@@ -275,6 +319,7 @@ watch(
       min-width: 0;
       width: auto;
       height: auto;
+      align-self: center;
     }
     &__routes { flex: 1; min-width: 0; max-width: 460px; }
   }
