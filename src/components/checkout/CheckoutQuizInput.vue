@@ -40,9 +40,6 @@ const emit = defineEmits(['dart', 'undo', 'submit', 'next'])
 
 const counter = computed(() => `${props.progress.index + 1} / ${props.progress.total}`)
 const isLast = computed(() => props.progress.index + 1 >= props.progress.total)
-const remaining = computed(
-  () => props.score - props.attemptDarts.reduce((s, d) => s + d.pts, 0),
-)
 
 const banner = computed(() => {
   const r = props.lastResult
@@ -67,11 +64,10 @@ watch(
 
 <template>
   <div class="quiz">
-    <div class="quiz__head">
-      <span class="quiz__counter">{{ counter }}</span>
-      <span class="quiz__target">Reste <strong>{{ score }}</strong></span>
-      <span class="quiz__remaining" :class="{ 'quiz__remaining--done': remaining === 0 }">
-      </span>
+    <div class="quiz__card">
+      <span class="quiz__card-count">{{ counter }}</span>
+      <span class="quiz__card-label">Reste</span>
+      <span class="quiz__card-score">{{ score }}</span>
     </div>
 
     <DartSlotsBar
@@ -140,35 +136,40 @@ watch(
   gap: $gap-sm;
   overflow-y: auto;
 
-  &__head {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: $gap-sm;
+  &__card {
+    position: relative;
     flex-shrink: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: $gap-xxs;
+    padding: $padding-md;
+    background: $orange;
+    border-radius: $radius-lg;
+    text-align: center;
   }
 
-  &__counter {
+  &__card-count {
+    position: absolute;
+    top: $padding-sm;
+    right: $padding-md;
+    @include text-xs;
+    color: rgba($white, 0.7);
+    font-variant-numeric: tabular-nums;
+  }
+
+  &__card-label {
     @include text-sm;
-    color: $muted;
-    font-variant-numeric: tabular-nums;
-  }
-
-  &__target {
-    @include text-md;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
     color: $white;
-
-    strong { @include title-lg; }
   }
 
-  &__remaining {
-    @include title-lg;
-    color: $muted;
+  &__card-score {
+    @include display-sm;
+    line-height: 1;
+    color: $white;
     font-variant-numeric: tabular-nums;
-    min-width: 2.5ch;
-    text-align: right;
-
-    &--done { color: $accent; }
   }
 
   &__slots { flex-shrink: 0; }
@@ -238,8 +239,8 @@ watch(
 
 @media (min-width: $bp-laptop) {
   .quiz {
-    &__counter { @include text-md; }
-    &__target { @include text-lg; }
+    &__card-label { @include text-md; }
+    &__card-score { @include display-md; }
 
     &__study {
       flex-direction: row;
